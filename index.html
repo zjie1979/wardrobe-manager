@@ -160,6 +160,9 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 .color-row{display:flex;gap:8px;flex-wrap:wrap}
 .color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border .15s}
 .color-dot.sel{border-color:var(--dark)}
+.occasion-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.occasion-choice{display:flex;align-items:center;justify-content:flex-start;gap:7px;min-height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:10px;background:#fff;color:var(--text);font-size:13px;font-weight:700;line-height:1;white-space:nowrap;cursor:pointer}
+.occasion-choice input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--dark);margin:0}
 .upload-zone{width:100%;aspect-ratio:1;background:#fafafa;border:2px dashed #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;margin-bottom:16px;position:relative}
 .upload-zone img{width:100%;height:100%;object-fit:cover}
 .upload-zone svg{opacity:.3}
@@ -266,6 +269,8 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
   .filter-bar select#f-cat,.filter-bar select#of-cat{display:none}
   .filter-bar .count{width:100%;margin-left:0;text-align:right}
   .category-strip{grid-template-columns:repeat(4,1fr)}
+  .occasion-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .occasion-choice{min-height:42px;padding:0 8px;font-size:12px;justify-content:center}
   .cloth-grid{grid-template-columns:repeat(3,1fr)}
   .freq-group-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .cloth-card .name{font-size:10px;padding:6px 5px}
@@ -565,12 +570,12 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
       </div>
     </div>
     <div class="field"><label>适合场景</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="通勤">通勤</label>
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="休闲">休闲</label>
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="约会">约会</label>
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="运动">运动</label>
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="正式">正式</label>
+      <div class="occasion-grid">
+        <label class="occasion-choice"><input type="checkbox" class="c-occ" value="通勤"><span>通勤</span></label>
+        <label class="occasion-choice"><input type="checkbox" class="c-occ" value="休闲"><span>休闲</span></label>
+        <label class="occasion-choice"><input type="checkbox" class="c-occ" value="约会"><span>约会</span></label>
+        <label class="occasion-choice"><input type="checkbox" class="c-occ" value="运动"><span>运动</span></label>
+        <label class="occasion-choice"><input type="checkbox" class="c-occ" value="正式"><span>正式</span></label>
       </div>
     </div>
     <div style="display:flex;gap:8px">
