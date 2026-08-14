@@ -8,7 +8,7 @@
   "display": "standalone",
   "display_override": ["standalone", "browser"],
   "background_color": "#fdf6f0",
-  "theme_color": "#e8b4b8",
+  "theme_color": "#223127",
   "orientation": "portrait-primary",
   "icons": [
     {
