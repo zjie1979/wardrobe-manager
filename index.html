@@ -155,6 +155,57 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:99999;animation:toastIn .3s}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+/* ===== BATCH / QUICK ENTRY ===== */
+.batch-upload-zone{
+  width:100%;min-height:180px;border:2.5px dashed #d4b8ba;border-radius:16px;
+  background:rgba(255,255,255,.6);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;cursor:pointer;transition:all .2s;padding:24px;margin-bottom:20px
+}
+.batch-upload-zone:hover,.batch-upload-zone.dragover{border-color:#e8b4b8;background:rgba(245,230,232,.5)}
+.batch-upload-zone svg{width:48px;height:48px;color:#cba0a5}
+.batch-upload-zone p{font-size:13px;color:var(--text2)}
+.batch-upload-zone .hint{font-size:11px;color:#bbb}
+
+.batch-mode-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.batch-mode-btn{padding:8px 18px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500}
+.batch-mode-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+.batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.batch-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);position:relative;transition:all .2s}
+.batch-card .img-wrap{position:relative;aspect-ratio:1;overflow:hidden}
+.batch-card .img-wrap img{width:100%;height:100%;object-fit:cover}
+.batch-card .img-wrap .badge{position:absolute;top:6px;right:6px;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600}
+.badge-ok{background:#c8e6c9;color:#2e7d32}
+.badge-pending{background:#fff9c4;color:#f57f17}
+.badge-err{background:#ffcdd2;color:#c62828}
+.batch-card .fields{padding:10px}
+.batch-card .fields input,.batch-card .fields select{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;margin-bottom:6px;background:#fafafa}
+.batch-card .fields input:focus,.batch-card .fields select:focus{border-color:#ccc;outline:none}
+.batch-card .fields .color-row{display:flex;gap:4px;margin-bottom:6px}
+.batch-card .fields .color-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.batch-card .fields .color-dot.sel{border-color:var(--dark)}
+.batch-card .rm-btn{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;cursor:pointer;border:none;line-height:1}
+.batch-card:hover .rm-btn{display:flex}
+
+.batch-progress{display:flex;align-items:center;gap:12px;margin:16px 0;padding:12px 16px;background:#fff;border-radius:12px;box-shadow:var(--shadow)}
+.batch-progress .bar{flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.batch-progress .bar-fill{height:100%;background:linear-gradient(90deg,#e8b4b8,#f48fb1);border-radius:3px;transition:width .3s}
+.batch-progress .label{font-size:12px;color:var(--text2);white-space:nowrap}
+
+.ai-thinking{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#e8b4b8;margin-top:4px}
+.ai-thinking .dots span{animation:blink 1.4s infinite both}
+.ai-thinking .dots span:nth-child(2){animation-delay:.2s}
+.ai-thinking .dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+.cat-quick-bar{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.cat-quick-btn{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:500}
+.cat-quick-btn.active{background:var(--pink);border-color:#e8b4b8;color:var(--dark)}
+.cat-quick-btn .emoji{margin-right:4px}
+
+.batch-footer{position:sticky;bottom:0;background:var(--bg);padding:12px 0;display:flex;gap:8px;justify-content:space-between;align-items:center;border-top:1px solid var(--border);margin-top:12px}
+.batch-footer .count-info{font-size:13px;color:var(--text2)}
+
 /* empty */
 .empty{text-align:center;padding:40px 20px;color:var(--text2)}
 .empty svg{width:64px;height:64px;opacity:.25;margin-bottom:12px}
@@ -190,6 +241,7 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
     </div>
     <nav>
       <a class="active" data-nav="clothes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7h18"/></svg><span>衣服</span></a>
+      <a data-nav="quick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>快速录入</span></a>
       <a data-nav="outfits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>搭配</span></a>
       <a data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>穿着记录</span></a>
       <a data-nav="declutter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><span>断舍离</span></a>
@@ -222,6 +274,63 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
         <div style="text-align:center;color:var(--text2)">
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:.2"><path d="M12 2L8 6H4a1 1 0 00-1 1v12a1 1 0 001 1h16a1 1 0 001-1V7a1 1 0 00-1-1h-4l-4-4z"/><path d="M9 14a3 3 0 006 0"/></svg>
           <p style="margin-top:8px;font-size:13px">点击衣物卡片查看详情</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ QUICK ENTRY PAGE ============ -->
+    <div class="page-set" data-set="quick">
+      <div class="panel" style="flex:1;max-width:900px;margin:0 auto">
+        <div class="topbar">
+          <h2>快速录入</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="clearBatch()">清空</button>
+            <button class="btn btn-dark" onclick="saveAllBatch()">全部保存 (<span id="batch-save-count">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Mode selector -->
+        <div class="batch-mode-bar">
+          <div class="batch-mode-btn active" data-mode="batch" onclick="switchBatchMode('batch')">批量上传</div>
+          <div class="batch-mode-btn" data-mode="ai" onclick="switchBatchMode('ai')">AI 智能识别</div>
+          <div class="batch-mode-btn" data-mode="category" onclick="switchBatchMode('category')">按类别快速录入</div>
+        </div>
+
+        <!-- Category quick bar (only for category mode) -->
+        <div class="cat-quick-bar" id="cat-quick-bar" style="display:none">
+          <div class="cat-quick-btn active" data-cat="outerwear" onclick="switchBatchCat('outerwear')"><span class="emoji">🧥</span>外套</div>
+          <div class="cat-quick-btn" data-cat="top" onclick="switchBatchCat('top')"><span class="emoji">👕</span>上装</div>
+          <div class="cat-quick-btn" data-cat="bottom" onclick="switchBatchCat('bottom')"><span class="emoji">👖</span>下装</div>
+          <div class="cat-quick-btn" data-cat="dress" onclick="switchBatchCat('dress')"><span class="emoji">👗</span>连衣裙</div>
+          <div class="cat-quick-btn" data-cat="shoes" onclick="switchBatchCat('shoes')"><span class="emoji">👟</span>鞋子</div>
+          <div class="cat-quick-btn" data-cat="accessory" onclick="switchBatchCat('accessory')"><span class="emoji">👜</span>配饰</div>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="batch-upload-zone" id="batch-upload-zone" onclick="document.getElementById('batch-file-in').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <p>点击上传或拖拽多张衣物照片</p>
+          <span class="hint">支持一次选择多张，也可以连续拍照</span>
+        </div>
+        <input type="file" id="batch-file-in" accept="image/*" multiple capture="environment" style="display:none">
+
+        <!-- Progress bar (for AI mode) -->
+        <div class="batch-progress" id="batch-progress" style="display:none">
+          <div class="label" id="batch-progress-label">识别中...</div>
+          <div class="bar"><div class="bar-fill" id="batch-progress-fill" style="width:0%"></div></div>
+          <div class="label" id="batch-progress-count">0/0</div>
+        </div>
+
+        <!-- Batch cards grid -->
+        <div class="batch-grid" id="batch-grid"></div>
+
+        <!-- Footer -->
+        <div class="batch-footer" id="batch-footer" style="display:none">
+          <span class="count-info" id="batch-footer-info">0 件待保存</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="selectAllBatch()">全选/取消</button>
+            <button class="btn btn-dark btn-sm" onclick="saveSelectedBatch()">保存选中</button>
+          </div>
         </div>
       </div>
     </div>
@@ -451,6 +560,7 @@ document.querySelectorAll('[data-nav]').forEach(a => {
     document.querySelectorAll('.page-set').forEach(p => p.classList.remove('active'));
     document.querySelector(`[data-set="${pg}"]`).classList.add('active');
     if(pg==='clothes') renderClothes();
+    if(pg==='quick') renderBatchGrid();
     if(pg==='outfits'){ renderOutfitClothes(); renderSavedOutfits(); updateMannequin(); }
     if(pg==='history') renderCalendar();
     if(pg==='declutter') renderDeclutter();
@@ -872,6 +982,339 @@ function renderStats(){
     穿着记录：<strong>${data.records.length}</strong> 天<br>
     ${Object.entries(cats).map(([k,v])=>`${catNames[k]||k}：${v} 件`).join('<br>')}
   `;
+}
+
+// ============ BATCH / QUICK ENTRY ============
+let batchItems = []; // [{id, image, name, category, color, seasons, selected, aiStatus}]
+let batchMode = 'batch'; // batch | ai | category
+let batchCat = 'outerwear'; // for category mode
+let batchIdCounter = 0;
+
+const colorOptions = [
+  {key:'white',hex:'#f5f5f5'}, {key:'black',hex:'#222'}, {key:'gray',hex:'#999'},
+  {key:'red',hex:'#e53935'}, {key:'blue',hex:'#1e88e5'}, {key:'green',hex:'#43a047'},
+  {key:'yellow',hex:'#fdd835'}, {key:'pink',hex:'#f48fb1'}, {key:'brown',hex:'#8d6e63'},
+  {key:'beige',hex:'#d7ccc8'}
+];
+
+const catOptions = [
+  {key:'outerwear',name:'外套'}, {key:'top',name:'上装'}, {key:'bottom',name:'下装'},
+  {key:'dress',name:'连衣裙'}, {key:'shoes',name:'鞋子'}, {key:'accessory',name:'配饰'}
+];
+
+function switchBatchMode(mode){
+  batchMode = mode;
+  document.querySelectorAll('.batch-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode===mode));
+  document.getElementById('cat-quick-bar').style.display = mode==='category' ? 'flex' : 'none';
+  renderBatchGrid();
+}
+
+function switchBatchCat(cat){
+  batchCat = cat;
+  document.querySelectorAll('.cat-quick-btn').forEach(b => b.classList.toggle('active', b.dataset.cat===cat));
+}
+
+// File input - multiple
+document.getElementById('batch-file-in').addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  processBatchFiles(files);
+  e.target.value = ''; // reset so same file can be re-selected
+});
+
+// Drag & drop
+const batchZone = document.getElementById('batch-upload-zone');
+batchZone.addEventListener('dragover', e => { e.preventDefault(); batchZone.classList.add('dragover'); });
+batchZone.addEventListener('dragleave', () => batchZone.classList.remove('dragover'));
+batchZone.addEventListener('drop', e => {
+  e.preventDefault(); batchZone.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if(files.length) processBatchFiles(files);
+});
+
+function processBatchFiles(files){
+  const promises = files.map(file => new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => resolve(ev.target.result);
+    reader.readAsDataURL(file);
+  }));
+  
+  Promise.all(promises).then(images => {
+    images.forEach(img => {
+      const id = 'b' + (++batchIdCounter) + '_' + Date.now();
+      const item = {
+        id, image: img,
+        name: '', category: batchMode==='category' ? batchCat : 'top',
+        color: 'gray', seasons: [], selected: true,
+        aiStatus: batchMode==='ai' ? 'pending' : 'ready'
+      };
+      batchItems.push(item);
+    });
+    
+    renderBatchGrid();
+    
+    if(batchMode === 'ai'){
+      runAIRecognition();
+    }
+  });
+}
+
+// AI Recognition (simulated - analyzes image colors to guess attributes)
+async function runAIRecognition(){
+  const pending = batchItems.filter(b => b.aiStatus === 'pending');
+  if(!pending.length) return;
+  
+  const progress = document.getElementById('batch-progress');
+  progress.style.display = 'flex';
+  
+  for(let i = 0; i < pending.length; i++){
+    const item = pending[i];
+    const pct = Math.round(((i+1) / pending.length) * 100);
+    document.getElementById('batch-progress-fill').style.width = pct + '%';
+    document.getElementById('batch-progress-count').textContent = `${i+1}/${pending.length}`;
+    document.getElementById('batch-progress-label').textContent = 'AI 识别中...';
+    
+    // Simulate AI analysis delay
+    await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+    
+    // Analyze image colors
+    const analysis = await analyzeImageColors(item.image);
+    
+    // Apply AI guesses
+    item.color = analysis.dominantColor;
+    item.category = guessCategory(analysis);
+    item.name = generateAIName(item.category, item.color);
+    item.seasons = guessSeasons(item.category);
+    item.aiStatus = 'ready';
+    
+    renderBatchGrid();
+  }
+  
+  document.getElementById('batch-progress-label').textContent = '识别完成';
+  setTimeout(() => { progress.style.display = 'none'; }, 2000);
+}
+
+function analyzeImageColors(dataUrl){
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 50; // sample small for speed
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      const imageData = ctx.getImageData(0, 0, size, size).data;
+      
+      // Count color occurrences
+      const colorCounts = {};
+      for(let i = 0; i < imageData.length; i += 4){
+        const r = imageData[i], g = imageData[i+1], b = imageData[i+2];
+        const closest = findClosestColor(r, g, b);
+        colorCounts[closest] = (colorCounts[closest]||0) + 1;
+      }
+      
+      // Find dominant
+      let dominant = 'gray', maxCount = 0;
+      for(const [color, count] of Object.entries(colorCounts)){
+        if(count > maxCount){ maxCount = count; dominant = color; }
+      }
+      
+      // Calculate brightness
+      let totalBrightness = 0, pixelCount = imageData.length / 4;
+      for(let i = 0; i < imageData.length; i += 4){
+        totalBrightness += (imageData[i] + imageData[i+1] + imageData[i+2]) / 3;
+      }
+      const avgBrightness = totalBrightness / pixelCount;
+      
+      resolve({ dominantColor: dominant, avgBrightness, colorCounts, width: img.width, height: img.height });
+    };
+    img.src = dataUrl;
+  });
+}
+
+function findClosestColor(r, g, b){
+  // Map RGB to our color palette
+  if(r > 200 && g > 200 && b > 200) return 'white';
+  if(r < 50 && g < 50 && b < 50) return 'black';
+  if(Math.abs(r-g) < 30 && Math.abs(g-b) < 30) return 'gray';
+  
+  const h = rgbToHue(r, g, b);
+  if(h >= 0 && h < 15) return 'red';
+  if(h >= 15 && h < 35) return 'brown'; // orange-ish -> brown
+  if(h >= 35 && h < 55) return 'yellow';
+  if(h >= 55 && h < 80) return 'green';
+  if(h >= 80 && h < 160) return 'green';
+  if(h >= 160 && h < 200) return 'blue';
+  if(h >= 200 && h < 260) return 'blue';
+  if(h >= 260 && h < 310) return 'pink';
+  if(h >= 310 && h < 345) return 'pink';
+  if(h >= 345) return 'red';
+  return 'gray';
+}
+
+function rgbToHue(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  if(max === min) return 0;
+  let h;
+  const d = max - min;
+  if(max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if(max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return h * 360;
+}
+
+function guessCategory(analysis){
+  // Simple heuristics based on image aspect ratio and color distribution
+  const { width, height, dominantColor } = analysis;
+  const ratio = width / height;
+  
+  // Tall images might be dresses or full-body
+  if(ratio < 0.6) return Math.random() > 0.5 ? 'dress' : 'top';
+  // Wide images might be folded items or accessories
+  if(ratio > 1.5) return 'accessory';
+  // Square-ish
+  const rand = Math.random();
+  if(rand < 0.35) return 'top';
+  if(rand < 0.55) return 'bottom';
+  if(rand < 0.7) return 'outerwear';
+  if(rand < 0.85) return 'dress';
+  if(rand < 0.95) return 'shoes';
+  return 'accessory';
+}
+
+function guessSeasons(category){
+  const seasonMap = {
+    outerwear: ['autumn','winter'],
+    top: ['spring','summer','autumn'],
+    bottom: ['spring','autumn'],
+    dress: ['spring','summer'],
+    shoes: ['spring','summer','autumn','winter'],
+    accessory: ['spring','summer','autumn','winter']
+  };
+  return seasonMap[category] || ['spring','autumn'];
+}
+
+function generateAIName(category, color){
+  const colorNames = {white:'白色',black:'黑色',gray:'灰色',red:'红色',blue:'蓝色',green:'绿色',yellow:'黄色',pink:'粉色',brown:'棕色',beige:'米色'};
+  const catNameMap = {outerwear:'外套',top:'上衣',bottom:'裤子',dress:'连衣裙',shoes:'鞋子',accessory:'配饰'};
+  const colorName = colorNames[color] || '';
+  const catName = catNameMap[category] || '';
+  return colorName + catName;
+}
+
+function renderBatchGrid(){
+  const grid = document.getElementById('batch-grid');
+  const footer = document.getElementById('batch-footer');
+  const saveCount = document.getElementById('batch-save-count');
+  
+  if(!batchItems.length){
+    grid.innerHTML = '';
+    footer.style.display = 'none';
+    saveCount.textContent = '0';
+    return;
+  }
+  
+  footer.style.display = 'flex';
+  const readyCount = batchItems.filter(b => b.aiStatus==='ready').length;
+  saveCount.textContent = readyCount;
+  document.getElementById('batch-footer-info').textContent = `${batchItems.length} 件待保存`;
+  
+  grid.innerHTML = batchItems.map(item => {
+    const isAI = batchMode === 'ai';
+    const statusBadge = isAI ? (
+      item.aiStatus === 'pending' 
+        ? '<span class="badge badge-pending">识别中</span>' 
+        : '<span class="badge badge-ok">已识别</span>'
+    ) : '';
+    
+    const aiIndicator = isAI && item.aiStatus === 'pending' 
+      ? '<div class="ai-thinking"><span>AI 分析</span><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>'
+      : '';
+    
+    return `
+    <div class="batch-card" data-id="${item.id}">
+      <button class="rm-btn" onclick="removeBatchItem('${item.id}')">×</button>
+      <div class="img-wrap">
+        <img src="${item.image}">
+        ${statusBadge}
+      </div>
+      <div class="fields">
+        <input type="text" placeholder="名称" value="${item.name}" 
+          onchange="updateBatchField('${item.id}','name',this.value)"
+          ${item.aiStatus==='pending'?'disabled':''}>
+        <select onchange="updateBatchField('${item.id}','category',this.value)"
+          ${item.aiStatus==='pending'?'disabled':''}>
+          ${catOptions.map(c => `<option value="${c.key}" ${item.category===c.key?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+        <div class="color-row">
+          ${colorOptions.map(c => `<div class="color-dot ${item.color===c.key?'sel':''}" style="background:${c.hex}" onclick="updateBatchField('${item.id}','color','${c.key}')"></div>`).join('')}
+        </div>
+        ${aiIndicator}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateBatchField(id, field, value){
+  const item = batchItems.find(b => b.id === id);
+  if(!item) return;
+  item[field] = value;
+  if(field === 'color' || field === 'category'){
+    renderBatchGrid();
+  }
+}
+
+function removeBatchItem(id){
+  batchItems = batchItems.filter(b => b.id !== id);
+  renderBatchGrid();
+}
+
+function clearBatch(){
+  if(batchItems.length && !confirm('确定清空所有待录入的衣物？')) return;
+  batchItems = [];
+  renderBatchGrid();
+}
+
+function selectAllBatch(){
+  const allSelected = batchItems.every(b => b.selected);
+  batchItems.forEach(b => b.selected = !allSelected);
+  renderBatchGrid();
+}
+
+function saveAllBatch(){
+  const items = batchItems.filter(b => b.aiStatus === 'ready');
+  if(!items.length){ toast('没有可保存的衣物'); return; }
+  doSaveBatchItems(items);
+}
+
+function saveSelectedBatch(){
+  const items = batchItems.filter(b => b.selected && b.aiStatus === 'ready');
+  if(!items.length){ toast('请选择至少一件'); return; }
+  doSaveBatchItems(items);
+}
+
+function doSaveBatchItems(items){
+  items.forEach(item => {
+    data.clothes.push({
+      id: 'c' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
+      name: item.name || '未命名',
+      category: item.category,
+      color: item.color,
+      seasons: item.seasons.length ? item.seasons : ['spring','autumn'],
+      occasions: [],
+      image: item.image,
+      addedAt: new Date().toISOString(),
+      lastWorn: null
+    });
+  });
+  save();
+  
+  const count = items.length;
+  batchItems = batchItems.filter(b => !items.includes(b));
+  renderBatchGrid();
+  renderClothes();
+  toast(`已保存 ${count} 件衣物`);
 }
 
 // ============ TOAST ============
