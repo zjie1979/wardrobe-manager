@@ -1,20 +1,20 @@
 {
-  "name": "衣橱管理器",
-  "short_name": "衣橱",
-  "description": "智能衣橱管理与搭配推荐",
+  "name": "我的电子衣橱",
+  "short_name": "电子衣橱",
+  "description": "智能衣橱管理、搭配推荐与穿着记录",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f8f9fa",
-  "theme_color": "#ff2e4d",
-  "orientation": "portrait",
+  "background_color": "#fdf6f0",
+  "theme_color": "#e8b4b8",
+  "orientation": "any",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23ff2e4d'/%3E%3Cpath d='M48 56v80a8 8 0 008 8h80a8 8 0 008-8V56M48 56l48-24 48 24M48 56h96' fill='none' stroke='white' stroke-width='6'/%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23f5e6e8'/%3E%3Cpath d='M96 30L72 50H44a8 8 0 00-8 8v88a8 8 0 008 8h104a8 8 0 008-8V58a8 8 0 00-8-8h-28L96 30z' fill='none' stroke='%23333' stroke-width='5'/%3E%3Cpath d='M76 100a20 20 0 0040 0' fill='none' stroke='%23333' stroke-width='5'/%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23ff2e4d'/%3E%3Cpath d='M128 149v214a21 21 0 0021 21h214a21 21 0 0021-21V149M128 149l128-64 128 64M128 149h256' fill='none' stroke='white' stroke-width='16'/%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23f5e6e8'/%3E%3Cpath d='M256 80L192 130H120a20 20 0 00-20 20v228a20 20 0 0020 20h272a20 20 0 0020-20V150a20 20 0 00-20-20h-72L256 80z' fill='none' stroke='%23333' stroke-width='14'/%3E%3Cpath d='M200 268a56 56 0 00112 0' fill='none' stroke='%23333' stroke-width='14'/%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml"
     }

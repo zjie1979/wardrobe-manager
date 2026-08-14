@@ -1,1057 +1,897 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>衣橱管理器 - 智能搭配</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ff2e4d">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #ff2e4d;
-            --primary-light: #ff6b8a;
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --text: #1a1a1a;
-            --text-light: #666;
-            --border: #e5e7eb;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --radius: 12px;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 80px;
-        }
-        .header {
-            background: var(--card);
-            padding: 16px 20px;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
-        
-        /* 底部导航 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right:
-            background: var(--card);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        .nav-item.active { color: var(--primary); }
-        .nav-item svg { width: 24px; height: 24px; }
-        .nav-item span { font-size: 11px; font-weight: 500; }
-        
-        /* 页面切换 */
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* 卡片样式 */
-        .card {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow);
-        }
-        
-        /* 衣物网格 */
-        .cloth-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-        }
-        .cloth-item {
-            background: var(--card);
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .cloth-item:active { transform: scale(0.95); }
-        .cloth-item img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            background: #f0f0f0;
-        }
-        .cloth-info { padding: 10px; }
-        .cloth-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-        .cloth-tag {
-            display: inline-block;
-            font-size: 10px;
-            padding: 2px 8px;
-            background: var(--primary-light);
-            color: white;
-            border-radius: 10px;
-        }
-        
-        /* 分类筛选 */
-        .filter-bar {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 12px 0;
-            -webkit-overflow-scrolling: touch;
-        }
-        .filter-chip {
-            padding: 8px 16px;
-            background: var(--card);
-            border-radius: 20px;
-            font-size: 13px;
-            white-space: nowrap;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-        .filter-chip.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* 拍照区域 */
-        .camera-area {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 20px;
-            text-align: center;
-        }
-        .camera-preview {
-            width: 100%;
-            max-width: 400px;
-            aspect-ratio: 1;
-            background: #f0f0f0;
-            border-radius: var(--radius);
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .camera-preview img, .camera-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .camera-controls {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 12px 24px;
-            border-radius: 24px;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        .btn-primary:active { transform: scale(0.95); }
-        .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-        }
-        
-        /* 搭配推荐 */
-        .outfit-card {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow);
-        }
-        .outfit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .outfit-title { font-size: 15px; font-weight: 600; }
-        .outfit-score {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .outfit-items {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 8px 0;
-        }
-        .outfit-item {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .outfit-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .outfit-reason {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-        
-        /* 断舍离 */
-        .declutter-item {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            padding: 12px;
-            background: var(--card);
-            border-radius: var(--radius);
-            margin-bottom: 8px;
-            box-shadow: var(--shadow);
-        }
-        .declutter-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-        .declutter-info { flex: 1; }
-        .declutter-name { font-size: 14px; font-weight: 500; }
-        .declutter-days { font-size: 12px; color: var(--text-light); }
-        .declutter-actions { display: flex; gap: 8px; }
-        .declutter-btn {
-            padding: 6px 12px;
-            border-radius: 16px;
-            border: none;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .btn-keep { background: #e8f5e9; color: #2e7d32; }
-        .btn-discard { background: #ffebee; color: #c62828; }
-        
-        /* 日历 */
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .calendar-nav {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .calendar-nav button {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            background: var(--card);
-        }
-        .calendar-day.has-outfit {
-            background: var(--primary-light);
-            color: white;
-        }
-        .calendar-day.today {
-            border: 2px solid var(--primary);
-        }
-        
-        /* 模态框 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: flex-end;
-            justify-content: center;
-        }
-        .modal.active { display: flex; }
-        .modal-content {
-            background: var(--card);
-            border-radius: 20px 20px 0 0;
-            width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
-            padding: 20px;
-            animation: slideUp 0.3s;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-handle {
-            width: 40px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin: 0 auto 16px;
-        }
-        
-        /* 表单 */
-        .form-group { margin-bottom: 16px; }
-        .form-label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-light);
-            margin-bottom: 6px;
-        }
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .color-picker {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .color-option {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-        }
-        .color-option.selected { border-color: var(--text); }
-        
-        /* 空状态 */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-light);
-        }
-        .empty-state svg { width: 80px; height: 80px; margin-bottom: 16px; opacity: 0.5; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>我的电子衣橱</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8b4b8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --pink:#f5e6e8;--pink2:#fce4ec;--bg:#fdf6f0;--card:#fff;
+  --text:#3a3a3a;--text2:#888;--border:#eee;--dark:#333;
+  --spring:#ffcdd2;--summer:#ffe0b2;--autumn:#e1bee7;--winter:#c8e6c9;--all:#e0e0e0;
+  --shadow:0 2px 12px rgba(0,0,0,.06);--radius:14px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text)}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;height:100vh;width:100%}
+
+/* sidebar */
+.sidebar{width:180px;background:var(--pink);display:flex;flex-direction:column;padding:24px 16px;flex-shrink:0}
+.sidebar .logo{display:flex;align-items:center;gap:8px;margin-bottom:32px}
+.sidebar .logo svg{width:28px;height:28px;color:var(--dark)}
+.sidebar .logo-text{font-size:13px;font-weight:700;line-height:1.3}
+.sidebar .logo-sub{font-size:10px;color:var(--text2)}
+.sidebar nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar nav a{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:14px;cursor:pointer;transition:all .2s;color:var(--text);text-decoration:none}
+.sidebar nav a:hover{background:rgba(255,255,255,.5)}
+.sidebar nav a.active{background:var(--dark);color:#fff}
+.sidebar nav a svg{width:18px;height:18px}
+
+/* main content */
+.main{flex:1;display:flex;overflow:hidden}
+.panel{flex:1;overflow-y:auto;padding:28px 24px}
+.panel-left{background:var(--pink2);border-right:1px solid var(--border)}
+.panel-right{background:var(--bg)}
+
+/* page visibility */
+.page-set{display:none}.page-set.active{display:contents}
+
+/* ===== TOP BAR ===== */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar h2{font-size:18px;font-weight:600}
+.btn{padding:10px 22px;border:none;border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn:active{transform:scale(.96)}
+.btn-dark{background:var(--dark);color:#fff}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-pink{background:#e8b4b8;color:#fff}
+
+/* ===== FORM ===== */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px}
+.field input,.field select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:#fff;outline:none;transition:border .2s}
+.field input:focus,.field select:focus{border-color:#ccc}
+
+/* season pills */
+.season-pills{display:flex;gap:8px;flex-wrap:wrap}
+.season-pill{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:2px solid transparent;transition:all .2s;opacity:.7}
+.season-pill:hover{opacity:1}
+.season-pill.active{opacity:1;border-color:var(--dark)}
+.season-pill[data-s="spring"]{background:var(--spring)}
+.season-pill[data-s="summer"]{background:var(--summer)}
+.season-pill[data-s="autumn"]{background:var(--autumn)}
+.season-pill[data-s="winter"]{background:var(--winter)}
+.season-pill[data-s="all"]{background:var(--all)}
+
+/* filter bar */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:#fff}
+.filter-bar .count{font-size:12px;color:var(--text2);margin-left:auto}
+
+/* ===== CLOTH GRID ===== */
+.cloth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cloth-card{background:#fff;border-radius:10px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;transition:all .15s;position:relative}
+.cloth-card:hover{box-shadow:var(--shadow)}
+.cloth-card.selected{border-color:var(--dark);box-shadow:0 0 0 2px rgba(51,51,51,.15)}
+.cloth-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#f5f5f5}
+.cloth-card .name{padding:6px 8px;font-size:11px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cloth-card .cat-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#e8b4b8}
+.cloth-card .rm{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+.cloth-card:hover .rm{display:flex}
+
+/* ===== MANNEQUIN ===== */
+.mannequin-area{display:flex;flex-direction:column;align-items:center;height:100%}
+.mannequin-header{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:12px}
+.mannequin-header h3{font-size:15px;font-weight:600}
+.mannequin-header .item-count{font-size:12px;color:var(--text2);background:var(--pink);padding:3px 10px;border-radius:12px}
+.mannequin-controls{display:flex;gap:8px;align-items:center;width:100%;margin-bottom:16px}
+.mannequin-controls .btn-sm{flex-shrink:0}
+.mannequin-controls input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:#ddd;border-radius:2px;outline:none}
+.mannequin-controls input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--dark);border-radius:50%;cursor:pointer}
+.mannequin-stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;width:100%;min-height:300px}
+.mannequin-svg{position:relative;z-index:1}
+.mannequin-overlay{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.worn-item{position:absolute;left:50%;transform:translateX(-50%);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:auto;cursor:grab}
+.worn-item img{width:100%;height:100%;object-fit:contain}
+.worn-label{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text2);background:rgba(255,255,255,.85);padding:2px 8px;border-radius:8px;white-space:nowrap;pointer-events:none}
+.side-icons{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+.side-icons button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .2s}
+.side-icons button:hover{background:var(--pink)}
+
+/* ===== SAVED OUTFITS ===== */
+.outfits-list{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.outfit-saved{background:#fff;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.outfit-saved-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.outfit-saved-name{font-size:14px;font-weight:600}
+.outfit-saved-meta{font-size:11px;color:var(--text2)}
+.outfit-saved-items{display:flex;gap:6px;overflow-x:auto}
+.outfit-saved-items img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#f5f5f5}
+.outfit-actions{display:flex;gap:6px;margin-top:8px}
+
+/* ===== WEARING HISTORY / CALENDAR ===== */
+.cal-wrap{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cal-head span{font-size:16px;font-weight:600}
+.cal-head button{background:none;border:none;font-size:20px;cursor:pointer;padding:4px 8px;color:var(--text)}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--text2);margin-bottom:4px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:12px;cursor:pointer;background:transparent;transition:background .15s}
+.cal-day:hover{background:var(--pink2)}
+.cal-day.today{border:2px solid #e8b4b8}
+.cal-day.has-record{background:var(--pink);font-weight:600}
+.cal-day.other{color:#ccc}
+
+/* ===== DECLUTTER ===== */
+.declutter-card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.declutter-card h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.declutter-card p{font-size:12px;color:var(--text2)}
+.declutter-item{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.declutter-item:last-child{border:none}
+.declutter-item img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#f5f5f5}
+.declutter-item .info{flex:1}
+.declutter-item .info .n{font-size:13px;font-weight:500}
+.declutter-item .info .d{font-size:11px;color:var(--text2)}
+.declutter-item .acts{display:flex;gap:6px}
+
+/* ===== ADD CLOTH MODAL ===== */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:360px;max-width:92vw;max-height:85vh;overflow-y:auto;animation:popIn .25s}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.modal-box h3{font-size:16px;font-weight:600;margin-bottom:16px;text-align:center}
+.color-row{display:flex;gap:8px;flex-wrap:wrap}
+.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border .15s}
+.color-dot.sel{border-color:var(--dark)}
+.upload-zone{width:100%;aspect-ratio:1;background:#fafafa;border:2px dashed #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;margin-bottom:16px;position:relative}
+.upload-zone img{width:100%;height:100%;object-fit:cover}
+.upload-zone svg{opacity:.3}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:99999;animation:toastIn .3s}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* empty */
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty svg{width:64px;height:64px;opacity:.25;margin-bottom:12px}
+.empty p{font-size:13px}
+
+/* responsive */
+@media(max-width:900px){
+  .sidebar{width:60px;padding:16px 8px}
+  .sidebar .logo-text,.sidebar .logo-sub,.sidebar nav a span{display:none}
+  .sidebar nav a{justify-content:center;padding:10px}
+  .sidebar .logo{justify-content:center}
+  .cloth-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:640px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;flex-direction:row;padding:8px;overflow-x:auto}
+  .sidebar .logo{display:none}
+  .sidebar nav{flex-direction:row;gap:4px}
+  .sidebar nav a{padding:8px 12px;flex-shrink:0}
+  .main{flex-direction:column}
+  .panel-left{border-right:none;border-bottom:1px solid var(--border)}
+  .cloth-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
 </head>
 <body>
-    <header class="header">
-        <h1>我的衣橱</h1>
-    </header>
-
-    <div class="container">
-        <!-- 衣橱页 -->
-        <div id="wardrobe-page" class="page active">
-            <div class="filter-bar">
-                <div class="filter-chip active" data-category="all">全部</div>
-                <div class="filter-chip" data-category="top">上装</div>
-                <div class="filter-chip" data-category="bottom">下装</div>
-                <div class="filter-chip" data-category="dress">连衣裙</div>
-                <div class="filter-chip" data-category="shoes">鞋子</div>
-                <div class="filter-chip" data-category="accessory">配饰</div>
-            </div>
-            <div class="cloth-grid" id="cloth-grid"></div>
-            <div class="empty-state" id="wardrobe-empty" style="display:none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7h18"/>
-                </svg>
-                <p>还没有衣物，点击下方拍照添加</p>
-            </div>
-        </div>
-
-        <!-- 拍照页 -->
-        <div id="camera-page" class="page">
-            <div class="camera-area">
-                <div class="camera-preview" id="camera-preview">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
-                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                </div>
-                <div class="camera-controls">
-                    <button class="btn btn-primary" onclick="takePhoto()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                        拍照
-                    </button>
-                    <button class="btn btn-secondary" onclick="uploadPhoto()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                        </svg>
-                        上传
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 搭配页 -->
-        <div id="outfit-page" class="page">
-            <div class="card">
-                <h3 style="margin-bottom: 12px;">智能搭配推荐</h3>
-                <div class="filter-bar" style="padding: 0;">
-                    <div class="filter-chip active" data-occasion="all">全部场合</div>
-                    <div class="filter-chip" data-occasion="work">上班</div>
-                    <div class="filter-chip" data-occasion="date">约会</div>
-                    <div class="filter-chip" data-occasion="casual">休闲</div>
-                    <div class="filter-chip" data-occasion="sport">运动</div>
-                </div>
-            </div>
-            <div id="outfit-list"></div>
-            <div class="empty-state" id="outfit-empty">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <p>添加衣物后，AI将为您推荐搭配方案</p>
-            </div>
-        </div>
-
-        <!-- 断舍离页 -->
-        <div id="declutter-page" class="page">
-            <div class="card">
-                <h3>断舍离追踪</h3>
-                <p style="font-size: 13px; color: var(--text-light); margin-top: 4px;">超过90天未穿的衣物</p>
-            </div>
-            <div id="declutter-list"></div>
-            <div class="empty-state" id="declutter-empty" style="display:none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p>太棒了！没有需要断舍离的衣物</p>
-            </div>
-        </div>
-
-        <!-- 日历页 -->
-        <div id="calendar-page" class="page">
-            <div class="card">
-                <div class="calendar-header">
-                    <div class="calendar-nav">
-                        <button onclick="changeMonth(-1)">&lt;</button>
-                        <span id="current-month"></span>
-                        <button onclick="changeMonth(1)">&gt;</button>
-                    </div>
-                </div>
-                <div class="calendar-grid" id="calendar-grid"></div>
-            </div>
-            <div class="card" id="today-outfit" style="margin-top: 12px;">
-                <h3>今日穿搭</h3>
-                <div id="today-outfit-content"></div>
-            </div>
-        </div>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L8 6H4a1 1 0 00-1 1v12a1 1 0 001 1h16a1 1 0 001-1V7a1 1 0 00-1-1h-4l-4-4z"/><path d="M9 14a3 3 0 006 0"/></svg>
+      <div><div class="logo-text">我的电子衣橱</div><div class="logo-sub">个人衣橱</div></div>
     </div>
-
-    <!-- 底部导航 -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" data-page="wardrobe">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7h18"/>
-            </svg>
-            <span>衣橱</span>
-        </div>
-        <div class="nav-item" data-page="camera">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-            </svg>
-            <span>拍照</span>
-        </div>
-        <div class="nav-item" data-page="outfit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span>搭配</span>
-        </div>
-        <div class="nav-item" data-page="declutter">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-            <span>断舍离</span>
-        </div>
-        <div class="nav-item" data-page="calendar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span>日历</span>
-        </div>
+    <nav>
+      <a class="active" data-nav="clothes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7h18"/></svg><span>衣服</span></a>
+      <a data-nav="outfits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span>搭配</span></a>
+      <a data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>穿着记录</span></a>
+      <a data-nav="declutter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><span>断舍离</span></a>
+      <a data-nav="backup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span>备份</span></a>
     </nav>
+  </aside>
 
-    <!-- 添加衣物模态框 -->
-    <div class="modal" id="add-modal">
-        <div class="modal-content">
-            <div class="modal-handle"></div>
-            <h3 style="margin-bottom: 16px;">添加衣物</h3>
-            <div class="form-group">
-                <label class="form-label">名称</label>
-                <input type="text" class="form-input" id="cloth-name" placeholder="例如：白色T恤">
-            </div>
-            <div class="form-group">
-                <label class="form-label">分类</label>
-                <select class="form-select" id="cloth-category">
-                    <option value="top">上装</option>
-                    <option value="bottom">下装</option>
-                    <option value="dress">连衣裙</option>
-                    <option value="shoes">鞋子</option>
-                    <option value="accessory">配饰</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">颜色</label>
-                <div class="color-picker" id="color-picker">
-                    <div class="color-option" style="background: #ffffff" data-color="white"></div>
-                    <div class="color-option" style="background: #000000" data-color="black"></div>
-                    <div class="color-option" style="background: #808080" data-color="gray"></div>
-                    <div class="color-option" style="background: #ff0000" data-color="red"></div>
-                    <div class="color-option" style="background: #0000ff" data-color="blue"></div>
-                    <div class="color-option" style="background: #008000" data-color="green"></div>
-                    <div class="color-option" style="background: #ffff00" data-color="yellow"></div>
-                    <div class="color-option" style="background: #ff69b4" data-color="pink"></div>
-                    <div class="color-option" style="background: #8b4513" data-color="brown"></div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">适合场合</label>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="occasion-check" value="work"> 上班
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="occasion-check" value="date"> 约会
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="occasion-check" value="casual"> 休闲
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="occasion-check" value="sport"> 运动
-                    </label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">适合季节</label>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="season-check" value="spring"> 春
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="season-check" value="summer"> 夏
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="season-check" value="autumn"> 秋
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px;">
-                        <input type="checkbox" class="season-check" value="winter"> 冬
-                    </label>
-                </div>
-            </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="saveCloth()">保存</button>
+  <div class="main">
+
+    <!-- ============ CLOTHES PAGE ============ -->
+    <div class="page-set active" data-set="clothes">
+      <div class="panel panel-left">
+        <div class="topbar">
+          <h2>我的衣服</h2>
+          <button class="btn btn-dark" onclick="openAddCloth()">+ 添加衣物</button>
         </div>
+        <div class="filter-bar">
+          <select id="f-cat" onchange="renderClothes()"><option value="all">全部分类</option><option value="outerwear">外套</option><option value="top">上装</option><option value="bottom">下装</option><option value="dress">连衣裙</option><option value="shoes">鞋子</option><option value="accessory">配饰</option></select>
+          <select id="f-color" onchange="renderClothes()"><option value="all">全部颜色</option><option value="white">白色</option><option value="black">黑色</option><option value="gray">灰色</option><option value="red">红色</option><option value="blue">蓝色</option><option value="green">绿色</option><option value="yellow">黄色</option><option value="pink">粉色</option><option value="brown">棕色</option><option value="beige">米色</option></select>
+          <select id="f-season" onchange="renderClothes()"><option value="all">全部季节</option><option value="spring">春</option><option value="summer">夏</option><option value="autumn">秋</option><option value="winter">冬</option></select>
+          <span class="count" id="cloth-count"></span>
+        </div>
+        <div class="cloth-grid" id="clothes-grid"></div>
+        <div class="empty" id="clothes-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7h18"/></svg>
+          <p>还没有衣物，点击右上角添加</p>
+        </div>
+      </div>
+      <div class="panel panel-right" style="display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:var(--text2)">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:.2"><path d="M12 2L8 6H4a1 1 0 00-1 1v12a1 1 0 001 1h16a1 1 0 001-1V7a1 1 0 00-1-1h-4l-4-4z"/><path d="M9 14a3 3 0 006 0"/></svg>
+          <p style="margin-top:8px;font-size:13px">点击衣物卡片查看详情</p>
+        </div>
+      </div>
     </div>
 
-    <!-- 穿搭记录模态框 -->
-    <div class="modal" id="outfit-modal">
-        <div class="modal-content">
-            <div class="modal-handle"></div>
-            <h3 style="margin-bottom: 16px;">记录今日穿搭</h3>
-            <div id="select-outfit-items"></div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveOutfit()">保存穿搭</button>
+    <!-- ============ OUTFITS PAGE ============ -->
+    <div class="page-set" data-set="outfits">
+      <!-- Left: Create outfit -->
+      <div class="panel panel-left">
+        <div class="topbar">
+          <h2>创建搭配</h2>
+          <button class="btn btn-dark" onclick="saveOutfit()">保存搭配</button>
         </div>
+        <div class="field"><label>搭配名称</label><input id="outfit-name" placeholder="周一通勤、周末咖啡"></div>
+        <div class="field"><label>适合场景</label><select id="outfit-scene"><option value="通勤">通勤</option><option value="休闲">休闲</option><option value="约会">约会</option><option value="运动">运动</option><option value="正式">正式</option></select></div>
+        <div class="field">
+          <label>搭配季节</label>
+          <div class="season-pills" id="outfit-seasons">
+            <div class="season-pill" data-s="spring" onclick="toggleSeason(this)">春</div>
+            <div class="season-pill" data-s="summer" onclick="toggleSeason(this)">夏</div>
+            <div class="season-pill" data-s="autumn" onclick="toggleSeason(this)">秋</div>
+            <div class="season-pill" data-s="winter" onclick="toggleSeason(this)">冬</div>
+            <div class="season-pill" data-s="all" onclick="toggleSeason(this)">四季</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>选择衣服</label>
+          <div class="filter-bar" style="margin-bottom:8px">
+            <select id="of-cat" onchange="renderOutfitClothes()"><option value="all">分类</option><option value="outerwear">外套</option><option value="top">上装</option><option value="bottom">下装</option><option value="dress">连衣裙</option><option value="shoes">鞋子</option><option value="accessory">配饰</option></select>
+            <select id="of-color" onchange="renderOutfitClothes()"><option value="all">颜色</option><option value="white">白色</option><option value="black">黑色</option><option value="gray">灰色</option><option value="red">红色</option><option value="blue">蓝色</option><option value="green">绿色</option><option value="pink">粉色</option><option value="brown">棕色</option><option value="beige">米色</option></select>
+            <select id="of-season" onchange="renderOutfitClothes()"><option value="all">季节</option><option value="spring">春</option><option value="summer">夏</option><option value="autumn">秋</option><option value="winter">冬</option></select>
+            <span class="count" id="outfit-selected-count">0 件</span>
+          </div>
+          <div class="cloth-grid" id="outfit-clothes-grid"></div>
+        </div>
+
+        <!-- saved outfits -->
+        <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">已保存的搭配</h3>
+          <div class="outfits-list" id="saved-outfits"></div>
+        </div>
+      </div>
+      <!-- Right: Mannequin -->
+      <div class="panel panel-right">
+        <div class="mannequin-area">
+          <div class="mannequin-header">
+            <h3>平面人偶</h3>
+            <span class="item-count" id="mannequin-count">0 件</span>
+          </div>
+          <div class="mannequin-controls">
+            <button class="btn btn-outline btn-sm" onclick="eraserMode()">橡皮擦</button>
+            <input type="range" id="mannequin-scale" min="50" max="150" value="100" oninput="updateMannequinScale()">
+            <span style="font-size:11px;color:var(--text2)">大小</span>
+            <button class="btn btn-outline btn-sm" onclick="undoMannequin()">撤回</button>
+          </div>
+          <div class="mannequin-stage" id="mannequin-stage">
+            <svg class="mannequin-svg" id="mannequin-svg" width="180" height="420" viewBox="0 0 180 420">
+              <!-- head -->
+              <ellipse cx="90" cy="40" rx="24" ry="28" fill="#f5deb3" stroke="#ddd" stroke-width="1"/>
+              <!-- hair -->
+              <path d="M66 36 Q66 12 90 12 Q114 12 114 36" fill="#5a3825" opacity=".8"/>
+              <!-- neck -->
+              <rect x="82" y="66" width="16" height="14" rx="4" fill="#f5deb3"/>
+              <!-- body/torso -->
+              <path d="M60 80 Q56 80 54 90 L50 170 Q50 176 56 178 L124 178 Q130 176 130 170 L126 90 Q124 80 120 80 Z" fill="#f0f0f0" stroke="#ddd" stroke-width="1"/>
+              <!-- arms -->
+              <path d="M54 86 Q40 90 34 140 Q32 152 38 154" fill="none" stroke="#f5deb3" stroke-width="12" stroke-linecap="round"/>
+              <path d="M126 86 Q140 90 146 140 Q148 152 142 154" fill="none" stroke="#f5deb3" stroke-width="12" stroke-linecap="round"/>
+              <!-- hands -->
+              <circle cx="38" cy="156" r="8" fill="#f5deb3"/>
+              <circle cx="142" cy="156" r="8" fill="#f5deb3"/>
+              <!-- legs -->
+              <path d="M70 178 L66 310 Q66 316 72 316 L82 316 Q86 316 86 310 L86 178" fill="#f5deb3" stroke="#ddd" stroke-width="0.5"/>
+              <path d="M94 178 L94 310 Q94 316 100 316 L110 316 Q114 316 114 310 L110 178" fill="#f5deb3" stroke="#ddd" stroke-width="0.5"/>
+              <!-- feet -->
+              <ellipse cx="76" cy="322" rx="14" ry="8" fill="#f5deb3" stroke="#ddd" stroke-width="0.5"/>
+              <ellipse cx="106" cy="322" rx="14" ry="8" fill="#f5deb3" stroke="#ddd" stroke-width="0.5"/>
+            </svg>
+            <!-- worn items overlay -->
+            <div id="worn-items-layer" style="position:absolute;inset:0;pointer-events:none"></div>
+            <!-- labels -->
+            <div id="worn-labels-layer" style="position:absolute;inset:0;pointer-events:none"></div>
+            <!-- side icons -->
+            <div class="side-icons">
+              <button onclick="openAddCloth()" title="添加衣物">+</button>
+              <button onclick="toggleFavorite()" title="收藏">☆</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <input type="file" id="file-input" accept="image/*" capture="environment" style="display: none;">
-    <video id="video" style="display: none;" autoplay playsinline></video>
-    <canvas id="canvas" style="display: none;"></canvas>
+    <!-- ============ HISTORY PAGE ============ -->
+    <div class="page-set" data-set="history">
+      <div class="panel" style="max-width:600px;margin:0 auto">
+        <div class="topbar"><h2>穿着记录</h2></div>
+        <div class="cal-wrap">
+          <div class="cal-head">
+            <button onclick="calNav(-1)">&lt;</button>
+            <span id="cal-title"></span>
+            <button onclick="calNav(1)">&gt;</button>
+          </div>
+          <div class="cal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div id="day-detail" style="margin-top:16px"></div>
+      </div>
+    </div>
 
-    <script>
-        // 数据存储
-        let clothes = JSON.parse(localStorage.getItem('wardrobe_clothes') || '[]');
-        let outfits = JSON.parse(localStorage.getItem('wardrobe_outfits') || '[]');
-        let currentPhoto = null;
-        let selectedColor = null;
-        let currentMonth = new Date();
-        let stream = null;
+    <!-- ============ DECLUTTER PAGE ============ -->
+    <div class="page-set" data-set="declutter">
+      <div class="panel" style="max-width:600px;margin:0 auto">
+        <div class="topbar"><h2>断舍离</h2></div>
+        <div class="declutter-card">
+          <h3>久未穿着的衣物</h3>
+          <p>超过90天未穿的衣物会出现在这里，帮你精简衣橱</p>
+        </div>
+        <div id="declutter-list"></div>
+        <div class="empty" id="declutter-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p>太棒了！没有需要断舍离的衣物</p>
+        </div>
+      </div>
+    </div>
 
-        // 页面切换
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                item.classList.add('active');
-                const page = item.dataset.page;
-                document.getElementById(page + '-page').classList.add('active');
-                
-                if (page === 'wardrobe') renderWardrobe();
-                if (page === 'outfit') generateOutfits();
-                if (page === 'declutter') renderDeclutter();
-                if (page === 'calendar') renderCalendar();
-                if (page === 'camera') initCamera();
-            });
-        });
+    <!-- ============ BACKUP PAGE ============ -->
+    <div class="page-set" data-set="backup">
+      <div class="panel" style="max-width:500px;margin:0 auto">
+        <div class="topbar"><h2>数据备份</h2></div>
+        <div class="declutter-card">
+          <h3>导出衣橱数据</h3>
+          <p>将所有衣物、搭配和记录导出为JSON文件</p>
+          <button class="btn btn-dark" style="margin-top:12px" onclick="exportData()">导出备份</button>
+        </div>
+        <div class="declutter-card">
+          <h3>导入衣橱数据</h3>
+          <p>从JSON备份文件恢复数据</p>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="btn btn-outline" style="margin-top:12px" onclick="document.getElementById('import-file').click()">选择文件</button>
+        </div>
+        <div class="declutter-card">
+          <h3>统计</h3>
+          <div id="stats" style="margin-top:8px;font-size:13px;color:var(--text2);line-height:2"></div>
+        </div>
+      </div>
+    </div>
 
-        // 分类筛选
-        document.querySelectorAll('.filter-chip[data-category]').forEach(chip => {
-            chip.addEventListener('click', () => {
-                document.querySelectorAll('.filter-chip[data-category]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                renderWardrobe(chip.dataset.category);
-            });
-        });
+  </div>
+</div>
 
-        // 场合筛选
-        document.querySelectorAll('.filter-chip[data-occasion]').forEach(chip => {
-            chip.addEventListener('click', () => {
-                document.querySelectorAll('.filter-chip[data-occasion]').forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                generateOutfits(chip.dataset.occasion);
-            });
-        });
+<!-- ADD CLOTH MODAL -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal-box">
+    <h3>添加衣物</h3>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-in').click()">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+    </div>
+    <input type="file" id="file-in" accept="image/*" capture="environment" style="display:none">
+    <div class="field"><label>名称</label><input id="c-name" placeholder="杏色大衣、白色T恤"></div>
+    <div class="field"><label>分类</label><select id="c-cat"><option value="outerwear">外套</option><option value="top">上装</option><option value="bottom">下装</option><option value="dress">连衣裙</option><option value="shoes">鞋子</option><option value="accessory">配饰</option></select></div>
+    <div class="field"><label>颜色</label>
+      <div class="color-row" id="color-row">
+        <div class="color-dot" style="background:#fff;border:1px solid #ddd" data-c="white"></div>
+        <div class="color-dot" style="background:#222" data-c="black"></div>
+        <div class="color-dot" style="background:#999" data-c="gray"></div>
+        <div class="color-dot" style="background:#e53935" data-c="red"></div>
+        <div class="color-dot" style="background:#1e88e5" data-c="blue"></div>
+        <div class="color-dot" style="background:#43a047" data-c="green"></div>
+        <div class="color-dot" style="background:#fdd835" data-c="yellow"></div>
+        <div class="color-dot" style="background:#f48fb1" data-c="pink"></div>
+        <div class="color-dot" style="background:#8d6e63" data-c="brown"></div>
+        <div class="color-dot" style="background:#d7ccc8" data-c="beige"></div>
+      </div>
+    </div>
+    <div class="field"><label>适合季节</label>
+      <div class="season-pills" id="c-seasons">
+        <div class="season-pill" data-s="spring" onclick="this.classList.toggle('active')">春</div>
+        <div class="season-pill" data-s="summer" onclick="this.classList.toggle('active')">夏</div>
+        <div class="season-pill" data-s="autumn" onclick="this.classList.toggle('active')">秋</div>
+        <div class="season-pill" data-s="winter" onclick="this.classList.toggle('active')">冬</div>
+      </div>
+    </div>
+    <div class="field"><label>适合场景</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="通勤">通勤</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="休闲">休闲</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="约会">约会</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="运动">运动</label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="正式">正式</label>
+      </div>
+    </div>
+    <button class="btn btn-dark" style="width:100%" onclick="saveCloth()">保存</button>
+  </div>
+</div>
 
-        // 颜色选择
-        document.querySelectorAll('.color-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                opt.classList.add('selected');
-                selectedColor = opt.dataset.color;
-            });
-        });
+<!-- RECORD OUTFIT MODAL (for calendar) -->
+<div class="modal-bg" id="record-modal">
+  <div class="modal-box">
+    <h3 id="record-title">记录穿搭</h3>
+    <div id="record-list"></div>
+    <button class="btn btn-dark" style="width:100%;margin-top:16px" onclick="saveRecord()">保存记录</button>
+  </div>
+</div>
 
-        // 渲染衣橱
-        function renderWardrobe(category = 'all') {
-            const grid = document.getElementById('cloth-grid');
-            const empty = document.getElementById('wardrobe-empty');
-            const filtered = category === 'all' ? clothes : clothes.filter(c => c.category === category);
-            
-            if (filtered.length === 0) {
-                grid.style.display = 'none';
-                empty.style.display = 'block';
-                return;
-            }
-            
-            grid.style.display = 'grid';
-            empty.style.display = 'none';
-            
-            const categoryNames = { top: '上装', bottom: '下装', dress: '连衣裙', shoes: '鞋子', accessory: '配饰' };
-            grid.innerHTML = filtered.map(c => `
-                <div class="cloth-item" onclick="viewCloth('${c.id}')">
-                    <img src="${c.image}" alt="${c.name}">
-                    <div class="cloth-info">
-                        <div class="cloth-name">${c.name}</div>
-                        <span class="cloth-tag">${categoryNames[c.category]}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
+<script>
+// ============ DATA ============
+const STORE = 'wardrobe_v3';
+let data = JSON.parse(localStorage.getItem(STORE) || '{"clothes":[],"outfits":[],"records":[]}');
+function save(){ localStorage.setItem(STORE, JSON.stringify(data)); }
 
-        // 拍照功能
-        async function initCamera() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                document.getElementById('camera-preview').innerHTML = '';
-                document.getElementById('camera-preview').appendChild(video);
-                video.style.display = 'block';
-            } catch (e) {
-                console.log('Camera not available');
-            }
-        }
+let selectedForOutfit = new Set();
+let erasing = false;
+let wornItems = []; // [{clothId, y}]
+let calMonth = new Date();
+let currentPhoto = null;
+let selectedColor = null;
+let recordDate = null;
 
-        function takePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            
-            if (video.srcObject) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                currentPhoto = canvas.toDataURL('image/jpeg', 0.8);
-                showAddModal();
-            } else {
-                document.getElementById('file-input').click();
-            }
-        }
+const catNames = {outerwear:'外套',top:'上装',bottom:'下装',dress:'连衣裙',shoes:'鞋子',accessory:'配饰'};
+const catY = {outerwear:90,top:100,bottom:195,dress:90,shoes:290,accessory:50};
 
-        function uploadPhoto() {
-            document.getElementById('file-input').click();
-        }
+// ============ NAV ============
+document.querySelectorAll('[data-nav]').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('[data-nav]').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    const pg = a.dataset.nav;
+    document.querySelectorAll('.page-set').forEach(p => p.classList.remove('active'));
+    document.querySelector(`[data-set="${pg}"]`).classList.add('active');
+    if(pg==='clothes') renderClothes();
+    if(pg==='outfits'){ renderOutfitClothes(); renderSavedOutfits(); updateMannequin(); }
+    if(pg==='history') renderCalendar();
+    if(pg==='declutter') renderDeclutter();
+    if(pg==='backup') renderStats();
+  });
+});
 
-        document.getElementById('file-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    currentPhoto = event.target.result;
-                    showAddModal();
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+// ============ CLOTHES ============
+function filterClothes(list, catF, colorF, seasonF){
+  return list.filter(c => {
+    if(catF!=='all' && c.category!==catF) return false;
+    if(colorF!=='all' && c.color!==colorF) return false;
+    if(seasonF!=='all' && !c.seasons.includes(seasonF)) return false;
+    return true;
+  });
+}
 
-        function showAddModal() {
-            document.getElementById('add-modal').classList.add('active');
-            if (currentPhoto) {
-                document.getElementById('camera-preview').innerHTML = `<img src="${currentPhoto}">`;
-            }
-        }
+function renderClothes(){
+  const cat = document.getElementById('f-cat').value;
+  const col = document.getElementById('f-color').value;
+  const sea = document.getElementById('f-season').value;
+  const list = filterClothes(data.clothes, cat, col, sea);
+  const grid = document.getElementById('clothes-grid');
+  const empty = document.getElementById('clothes-empty');
+  document.getElementById('cloth-count').textContent = list.length + ' 件';
+  if(!list.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = list.map(c => `
+    <div class="cloth-card" onclick="viewCloth('${c.id}')">
+      <div class="rm" onclick="event.stopPropagation();removeCloth('${c.id}')">×</div>
+      <div class="cat-dot" style="background:${colorHex(c.color)}"></div>
+      <img src="${c.image}" alt="${c.name}">
+      <div class="name">${c.name}</div>
+    </div>
+  `).join('');
+}
 
-        function saveCloth() {
-            const name = document.getElementById('cloth-name').value || '未命名衣物';
-            const category = document.getElementById('cloth-category').value;
-            const occasions = Array.from(document.querySelectorAll('.occasion-check:checked')).map(c => c.value);
-            const seasons = Array.from(document.querySelectorAll('.season-check:checked')).map(c => c.value);
-            
-            const cloth = {
-                id: Date.now().toString(),
-                name,
-                category,
-                color: selectedColor || 'gray',
-                occasions,
-                seasons,
-                image: currentPhoto,
-                addedAt: new Date().toISOString(),
-                lastWorn: null
-            };
-            
-            clothes.push(cloth);
-            localStorage.setItem('wardrobe_clothes', JSON.stringify(clothes));
-            
-            // 重置表单
-            document.getElementById('cloth-name').value = '';
-            document.querySelectorAll('.occasion-check, .season-check').forEach(c => c.checked = false);
-            document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-            selectedColor = null;
-            currentPhoto = null;
-            
-            document.getElementById('add-modal').classList.remove('active');
-            
-            // 切换到衣橱页
-            document.querySelector('[data-page="wardrobe"]').click();
-        }
+function viewCloth(id){
+  const c = data.clothes.find(x=>x.id===id);
+  if(!c) return;
+  toast(`${c.name} · ${catNames[c.category]} · ${c.color}`);
+}
 
-        // 智能搭配
-        function generateOutfits(occasion = 'all') {
-            const list = document.getElementById('outfit-list');
-            const empty = document.getElementById('outfit-empty');
-            
-            if (clothes.length < 2) {
-                list.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            
-            empty.style.display = 'none';
-            
-            const tops = clothes.filter(c => c.category === 'top');
-            const bottoms = clothes.filter(c => c.category === 'bottom');
-            const dresses = clothes.filter(c => c.category === 'dress');
-            
-            let recommendations = [];
-            
-            // 生成搭配
-            if (occasion === 'all' || occasion === 'work') {
-                if (tops.length > 0 && bottoms.length > 0) {
-                    recommendations.push({
-                        items: [tops[0], bottoms[0]],
-                        score: 85,
-                        occasion: 'work',
-                        reason: '经典通勤搭配，适合办公室穿着'
-                    });
-                }
-            }
-            
-            if (occasion === 'all' || occasion === 'casual') {
-                if (tops.length > 1 && bottoms.length > 1) {
-                    recommendations.push({
-                        items: [tops[1] || tops[0], bottoms[1] || bottoms[0]],
-                        score: 78,
-                        occasion: 'casual',
-                        reason: '舒适休闲，适合日常出行'
-                    });
-                }
-            }
-            
-            if (occasion === 'all' || occasion === 'date') {
-                if (dresses.length > 0) {
-                    recommendations.push({
-                        items: [dresses[0]],
-                        score: 90,
-                        occasion: 'date',
-                        reason: '优雅连衣裙，约会必备'
-                    });
-                }
-            }
-            
-            // 颜色搭配规则
-            const colorPairs = {
-                'white': ['black', 'blue', 'red', 'green'],
-                'black': ['white', 'gray', 'red', 'pink'],
-                'blue': ['white', 'black', 'gray'],
-                'red': ['white', 'black', 'blue']
-            };
-            
-            if (recommendations.length === 0 && tops.length > 0 && bottoms.length > 0) {
-                recommendations.push({
-                    items: [tops[0], bottoms[0]],
-                    score: 75,
-                    occasion: 'casual',
-                    reason: '根据您的衣橱推荐'
-                });
-            }
-            
-            const occasionNames = { work: '上班', date: '约会', casual: '休闲', sport: '运动' };
-            
-            list.innerHTML = recommendations.map(r => `
-                <div class="outfit-card">
-                    <div class="outfit-header">
-                        <div class="outfit-title">${occasionNames[r.occasion] || '日常'}搭配</div>
-                        <div class="outfit-score">${r.score}分</div>
-                    </div>
-                    <div class="outfit-items">
-                        ${r.items.map(item => `
-                            <div class="outfit-item">
-                                <img src="${item.image}" alt="${item.name}">
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="outfit-reason">${r.reason}</div>
-                </div>
-            `).join('');
-        }
+function removeCloth(id){
+  if(!confirm('确定删除这件衣物？')) return;
+  data.clothes = data.clothes.filter(c=>c.id!==id);
+  save(); renderClothes();
+}
 
-        // 断舍离
-        function renderDeclutter() {
-            const list = document.getElementById('declutter-list');
-            const empty = document.getElementById('declutter-empty');
-            const now = new Date();
-            
-            const oldClothes = clothes.filter(c => {
-                if (!c.lastWorn) return true;
-                const days = Math.floor((now - new Date(c.lastWorn)) / (1000 * 60 * 60 * 24));
-                return days > 90;
-            });
-            
-            if (oldClothes.length === 0) {
-                list.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            
-            empty.style.display = 'none';
-            list.innerHTML = oldClothes.map(c => {
-                const days = c.lastWorn ? Math.floor((now - new Date(c.lastWorn)) / (1000 * 60 * 60 * 24)) : 999;
-                return `
-                    <div class="declutter-item">
-                        <img src="${c.image}" class="declutter-img" alt="${c.name}">
-                        <div class="declutter-info">
-                            <div class="declutter-name">${c.name}</div>
-                            <div class="declutter-days">${days === 999 ? '从未穿过' : days + '天未穿'}</div>
-                        </div>
-                        <div class="declutter-actions">
-                            <button class="declutter-btn btn-keep" onclick="keepCloth('${c.id}')">保留</button>
-                            <button class="declutter-btn btn-discard" onclick="discardCloth('${c.id}')">断舍离</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+// ============ ADD CLOTH ============
+function openAddCloth(){ document.getElementById('add-modal').classList.add('show'); }
+function closeAddCloth(){ document.getElementById('add-modal').classList.remove('show'); resetAddForm(); }
 
-        function keepCloth(id) {
-            const cloth = clothes.find(c => c.id === id);
-            if (cloth) {
-                cloth.lastWorn = new Date().toISOString();
-                localStorage.setItem('wardrobe_clothes', JSON.stringify(clothes));
-                renderDeclutter();
-            }
-        }
+function resetAddForm(){
+  document.getElementById('c-name').value='';
+  document.getElementById('c-cat').value='outerwear';
+  document.querySelectorAll('#c-seasons .season-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.c-occ').forEach(c=>c.checked=false);
+  document.querySelectorAll('#color-row .color-dot').forEach(d=>d.classList.remove('sel'));
+  selectedColor = null; currentPhoto = null;
+  const zone = document.getElementById('upload-zone');
+  zone.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>';
+}
 
-        function discardCloth(id) {
-            if (confirm('确定要断舍离这件衣物吗？')) {
-                clothes = clothes.filter(c => c.id !== id);
-                localStorage.setItem('wardrobe_clothes', JSON.stringify(clothes));
-                renderDeclutter();
-            }
-        }
+// file input
+document.getElementById('file-in').addEventListener('change', e => {
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    currentPhoto = ev.target.result;
+    document.getElementById('upload-zone').innerHTML = `<img src="${currentPhoto}">`;
+  };
+  r.readAsDataURL(file);
+});
 
-        // 日历
-        function renderCalendar() {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
-            document.getElementById('current-month').textContent = `${year}年${month + 1}月`;
-            
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
-            
-            const grid = document.getElementById('calendar-grid');
-            let html = '';
-            
-            // 空白填充
-            for (let i = 0; i < firstDay; i++) {
-                html += '<div class="calendar-day"></div>';
-            }
-            
-            // 日期
-            for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month, day);
-                const dateStr = date.toISOString().split('T')[0];
-                const hasOutfit = outfits.some(o => o.date === dateStr);
-                const isToday = date.toDateString() === today.toDateString();
-                
-                html += `<div class="calendar-day ${hasOutfit ? 'has-outfit' : ''} ${isToday ? 'today' : ''}" onclick="selectDate('${dateStr}')">${day}</div>`;
-            }
-            
-            grid.innerHTML = html;
-            
-            // 今日穿搭
-            renderTodayOutfit();
-        }
+// color dots
+document.querySelectorAll('#color-row .color-dot').forEach(d => {
+  d.addEventListener('click', () => {
+    document.querySelectorAll('#color-row .color-dot').forEach(x=>x.classList.remove('sel'));
+    d.classList.add('sel');
+    selectedColor = d.dataset.c;
+  });
+});
 
-        function changeMonth(delta) {
-            currentMonth.setMonth(currentMonth.getMonth() + delta);
-            renderCalendar();
-        }
+function saveCloth(){
+  const name = document.getElementById('c-name').value.trim() || '未命名';
+  const category = document.getElementById('c-cat').value;
+  const seasons = Array.from(document.querySelectorAll('#c-seasons .season-pill.active')).map(p=>p.dataset.s);
+  const occasions = Array.from(document.querySelectorAll('.c-occ:checked')).map(c=>c.value);
+  
+  // If no photo, generate a placeholder
+  const image = currentPhoto || generatePlaceholder(name, selectedColor||'gray');
+  
+  data.clothes.push({
+    id: 'c'+Date.now(),
+    name, category,
+    color: selectedColor||'gray',
+    seasons, occasions,
+    image,
+    addedAt: new Date().toISOString(),
+    lastWorn: null
+  });
+  save();
+  closeAddCloth();
+  renderClothes();
+  toast('衣物已添加');
+}
 
-        function selectDate(dateStr) {
-            const outfit = outfits.find(o => o.date === dateStr);
-            if (outfit) {
-                showOutfitDetail(outfit);
-            } else {
-                showRecordOutfit(dateStr);
-            }
-        }
+function generatePlaceholder(name, color){
+  const c = document.createElement('canvas');
+  c.width=200; c.height=200;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = colorHex(color);
+  ctx.fillRect(0,0,200,200);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, 100, 108);
+  return c.toDataURL();
+}
 
-        function renderTodayOutfit() {
-            const today = new Date().toISOString().split('T')[0];
-            const outfit = outfits.find(o => o.date === today);
-            const content = document.getElementById('today-outfit-content');
-            
-            if (outfit) {
-                content.innerHTML = `
-                    <div class="outfit-items" style="margin-top: 12px;">
-                        ${outfit.items.map(id => {
-                            const cloth = clothes.find(c => c.id === id);
-                            return cloth ? `<div class="outfit-item"><img src="${cloth.image}"></div>` : '';
-                        }).join('')}
-                    </div>
-                `;
-            } else {
-                content.innerHTML = '<p style="margin-top: 12px; color: var(--text-light);">今天还没有记录穿搭</p>';
-            }
-        }
+function colorHex(c){
+  const map={white:'#f5f5f5',black:'#333',gray:'#999',red:'#e53935',blue:'#1e88e5',green:'#43a047',yellow:'#fdd835',pink:'#f48fb1',brown:'#8d6e63',beige:'#d7ccc8'};
+  return map[c]||'#ccc';
+}
 
-        function showRecordOutfit(dateStr) {
-            const modal = document.getElementById('outfit-modal');
-            const selectDiv = document.getElementById('select-outfit-items');
-            
-            selectDiv.innerHTML = clothes.map(c => `
-                <label style="display: flex; align-items: center; gap: 12px; padding: 8px; border-bottom: 1px solid var(--border);">
-                    <input type="checkbox" class="outfit-select" value="${c.id}">
-                    <img src="${c.image}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
-                    <span>${c.name}</span>
-                </label>
-            `).join('');
-            
-            modal.dataset.date = dateStr;
-            modal.classList.add('active');
-        }
+// ============ OUTFIT CREATION ============
+function renderOutfitClothes(){
+  const cat = document.getElementById('of-cat').value;
+  const col = document.getElementById('of-color').value;
+  const sea = document.getElementById('of-season').value;
+  const list = filterClothes(data.clothes, cat, col, sea);
+  const grid = document.getElementById('outfit-clothes-grid');
+  grid.innerHTML = list.map(c => `
+    <div class="cloth-card ${selectedForOutfit.has(c.id)?'selected':''}" onclick="toggleOutfitItem('${c.id}')">
+      <div class="cat-dot" style="background:${colorHex(c.color)}"></div>
+      <img src="${c.image}" alt="${c.name}">
+      <div class="name">${c.name}</div>
+    </div>
+  `).join('');
+  document.getElementById('outfit-selected-count').textContent = selectedForOutfit.size + ' 件';
+}
 
-        function saveOutfit() {
-            const modal = document.getElementById('outfit-modal');
-            const dateStr = modal.dataset.date;
-            const selected = Array.from(document.querySelectorAll('.outfit-select:checked')).map(c => c.value);
-            
-            if (selected.length === 0) {
-                alert('请至少选择一件衣物');
-                return;
-            }
-            
-            outfits.push({
-                date: dateStr,
-                items: selected,
-                createdAt: new Date().toISOString()
-            });
-            
-            localStorage.setItem('wardrobe_outfits', JSON.stringify(outfits));
-            
-            // 更新最后穿着时间
-            selected.forEach(id => {
-                const cloth = clothes.find(c => c.id === id);
-                if (cloth) cloth.lastWorn = new Date().toISOString();
-            });
-            localStorage.setItem('wardrobe_clothes', JSON.stringify(clothes));
-            
-            modal.classList.remove('active');
-            renderCalendar();
-        }
+function toggleOutfitItem(id){
+  if(erasing) return;
+  if(selectedForOutfit.has(id)){
+    selectedForOutfit.delete(id);
+    wornItems = wornItems.filter(w=>w.clothId!==id);
+  } else {
+    selectedForOutfit.add(id);
+    const cloth = data.clothes.find(c=>c.id===id);
+    if(cloth) wornItems.push({clothId:id, y:catY[cloth.category]||120});
+  }
+  renderOutfitClothes();
+  updateMannequin();
+}
 
-        function showOutfitDetail(outfit) {
-            const items = outfit.items.map(id => clothes.find(c => c.id === id)).filter(Boolean);
-            alert('穿搭详情：' + items.map(i => i.name).join(', '));
-        }
+function toggleSeason(el){
+  const parent = el.parentElement;
+  if(el.dataset.s==='all'){
+    parent.querySelectorAll('.season-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    parent.querySelector('[data-s="all"]').classList.remove('active');
+    el.classList.toggle('active');
+  }
+}
 
-        // 关闭模态框
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('active');
-            });
-        });
+function saveOutfit(){
+  if(!selectedForOutfit.size){ toast('请先选择衣物'); return; }
+  const name = document.getElementById('outfit-name').value.trim() || '未命名搭配';
+  const scene = document.getElementById('outfit-scene').value;
+  const seasons = Array.from(document.querySelectorAll('#outfit-seasons .season-pill.active')).map(p=>p.dataset.s);
+  
+  data.outfits.push({
+    id: 'o'+Date.now(),
+    name, scene, seasons,
+    items: [...selectedForOutfit],
+    createdAt: new Date().toISOString()
+  });
+  save();
+  
+  // reset
+  selectedForOutfit.clear();
+  wornItems = [];
+  document.getElementById('outfit-name').value = '';
+  document.querySelectorAll('#outfit-seasons .season-pill').forEach(p=>p.classList.remove('active'));
+  renderOutfitClothes();
+  renderSavedOutfits();
+  updateMannequin();
+  toast('搭配已保存');
+}
 
-        // 初始化
-        renderWardrobe();
+function renderSavedOutfits(){
+  const div = document.getElementById('saved-outfits');
+  if(!data.outfits.length){ div.innerHTML='<p style="font-size:12px;color:var(--text2)">还没有保存的搭配</p>'; return; }
+  div.innerHTML = data.outfits.slice().reverse().map(o => {
+    const items = o.items.map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
+    return `
+    <div class="outfit-saved">
+      <div class="outfit-saved-head">
+        <span class="outfit-saved-name">${o.name}</span>
+        <span class="outfit-saved-meta">${o.scene} · ${o.seasons.join('/')}</span>
+      </div>
+      <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}" alt="${i.name}">`).join('')}</div>
+      <div class="outfit-actions">
+        <button class="btn btn-outline btn-sm" onclick="loadOutfit('${o.id}')">穿上</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteOutfit('${o.id}')" style="color:#c62828">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-        // PWA注册
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
-    </script>
+function loadOutfit(id){
+  const o = data.outfits.find(x=>x.id===id); if(!o) return;
+  selectedForOutfit = new Set(o.items);
+  wornItems = o.items.map(cid => {
+    const c = data.clothes.find(x=>x.id===cid);
+    return {clothId:cid, y: c ? catY[c.category]||120 : 120};
+  });
+  document.getElementById('outfit-name').value = o.name;
+  document.getElementById('outfit-scene').value = o.scene;
+  document.querySelectorAll('#outfit-seasons .season-pill').forEach(p => {
+    p.classList.toggle('active', o.seasons.includes(p.dataset.s));
+  });
+  renderOutfitClothes();
+  updateMannequin();
+}
+
+function deleteOutfit(id){
+  if(!confirm('删除这个搭配？')) return;
+  data.outfits = data.outfits.filter(o=>o.id!==id);
+  save(); renderSavedOutfits();
+}
+
+// ============ MANNEQUIN ============
+function updateMannequin(){
+  const scale = document.getElementById('mannequin-scale').value / 100;
+  document.getElementById('mannequin-count').textContent = wornItems.length + ' 件';
+  document.getElementById('mannequin-svg').style.transform = `scale(${scale})`;
+  
+  const layer = document.getElementById('worn-items-layer');
+  const labelLayer = document.getElementById('worn-labels-layer');
+  layer.innerHTML = '';
+  labelLayer.innerHTML = '';
+  
+  const stage = document.getElementById('mannequin-stage');
+  const stageRect = stage.getBoundingClientRect();
+  const centerX = stageRect.width / 2;
+  const svgTop = (stageRect.height - 420 * scale) / 2;
+  
+  wornItems.forEach(w => {
+    const cloth = data.clothes.find(c=>c.id===w.clothId);
+    if(!cloth) return;
+    const size = 90 * scale;
+    const top = svgTop + w.y * scale;
+    
+    const div = document.createElement('div');
+    div.className = 'worn-item';
+    div.style.cssText = `width:${size}px;height:${size}px;top:${top}px;pointer-events:auto;`;
+    div.innerHTML = `<img src="${cloth.image}" alt="${cloth.name}">`;
+    if(erasing){
+      div.style.cursor = 'pointer';
+      div.onclick = () => { removeWorn(w.clothId); };
+    }
+    layer.appendChild(div);
+    
+    const label = document.createElement('div');
+    label.className = 'worn-label';
+    label.style.cssText = `top:${top + size + 4}px`;
+    label.textContent = catNames[cloth.category]||cloth.category;
+    labelLayer.appendChild(label);
+  });
+}
+
+function updateMannequinScale(){ updateMannequin(); }
+
+function eraserMode(){
+  erasing = !erasing;
+  toast(erasing ? '橡皮擦已开启，点击衣物移除' : '橡皮擦已关闭');
+  updateMannequin();
+}
+
+function removeWorn(id){
+  selectedForOutfit.delete(id);
+  wornItems = wornItems.filter(w=>w.clothId!==id);
+  renderOutfitClothes();
+  updateMannequin();
+}
+
+function undoMannequin(){
+  if(!wornItems.length) return;
+  const last = wornItems.pop();
+  selectedForOutfit.delete(last.clothId);
+  renderOutfitClothes();
+  updateMannequin();
+}
+
+function toggleFavorite(){ toast('已收藏'); }
+
+// ============ WEARING HISTORY / CALENDAR ============
+function renderCalendar(){
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  document.getElementById('cal-title').textContent = `${y}年${m+1}月`;
+  const first = new Date(y,m,1).getDay();
+  const days = new Date(y,m+1,0).getDate();
+  const today = new Date();
+  let html = '';
+  for(let i=0;i<first;i++) html += '<div class="cal-day other"></div>';
+  for(let d=1;d<=days;d++){
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasR = data.records.some(r=>r.date===ds);
+    const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===d;
+    html += `<div class="cal-day ${hasR?'has-record':''} ${isToday?'today':''}" onclick="clickDay('${ds}')">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function calNav(d){ calMonth.setMonth(calMonth.getMonth()+d); renderCalendar(); }
+
+function clickDay(ds){
+  const existing = data.records.filter(r=>r.date===ds);
+  if(existing.length){
+    // show detail
+    const div = document.getElementById('day-detail');
+    div.innerHTML = existing.map(r => {
+      const items = r.items.map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
+      return `<div class="outfit-saved">
+        <div class="outfit-saved-head"><span class="outfit-saved-name">${r.outfitName||'每日穿搭'}</span><span class="outfit-saved-meta">${ds}</span></div>
+        <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}">`).join('')}</div>
+      </div>`;
+    }).join('');
+  } else {
+    // open record modal
+    recordDate = ds;
+    document.getElementById('record-title').textContent = `记录 ${ds} 穿搭`;
+    const list = document.getElementById('record-list');
+    list.innerHTML = data.clothes.map(c => `
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+        <input type="checkbox" class="rec-check" value="${c.id}">
+        <img src="${c.image}" style="width:44px;height:44px;border-radius:6px;object-fit:cover">
+        <span style="font-size:13px">${c.name}</span>
+      </label>
+    `).join('');
+    document.getElementById('record-modal').classList.add('show');
+  }
+}
+
+function saveRecord(){
+  const items = Array.from(document.querySelectorAll('.rec-check:checked')).map(c=>c.value);
+  if(!items.length){ toast('请选择衣物'); return; }
+  data.records.push({ date:recordDate, items, outfitName:'每日穿搭', createdAt:new Date().toISOString() });
+  // update lastWorn
+  items.forEach(id=>{ const c=data.clothes.find(x=>x.id===id); if(c) c.lastWorn=new Date().toISOString(); });
+  save();
+  document.getElementById('record-modal').classList.remove('show');
+  renderCalendar();
+  toast('穿搭已记录');
+}
+
+// ============ DECLUTTER ============
+function renderDeclutter(){
+  const now = new Date();
+  const old = data.clothes.filter(c => {
+    if(!c.lastWorn) return true;
+    return (now - new Date(c.lastWorn)) / 86400000 > 90;
+  });
+  const list = document.getElementById('declutter-list');
+  const empty = document.getElementById('declutter-empty');
+  if(!old.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = old.map(c => {
+    const days = c.lastWorn ? Math.floor((now - new Date(c.lastWorn))/86400000) : '∞';
+    return `<div class="declutter-item">
+      <img src="${c.image}">
+      <div class="info"><div class="n">${c.name}</div><div class="d">${days==='∞'?'从未穿过':days+'天未穿'}</div></div>
+      <div class="acts">
+        <button class="btn btn-sm" style="background:#e8f5e9;color:#2e7d32" onclick="keepItem('${c.id}')">保留</button>
+        <button class="btn btn-sm" style="background:#ffebee;color:#c62828" onclick="discardItem('${c.id}')">断舍离</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function keepItem(id){ const c=data.clothes.find(x=>x.id===id); if(c){c.lastWorn=new Date().toISOString(); save(); renderDeclutter();} }
+function discardItem(id){ if(!confirm('确定断舍离？')) return; data.clothes=data.clothes.filter(c=>c.id!==id); save(); renderDeclutter(); toast('已断舍离'); }
+
+// ============ BACKUP ============
+function exportData(){
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `wardrobe-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('备份已导出');
+}
+
+function importData(e){
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if(imported.clothes) data = imported;
+      save(); toast('数据已恢复');
+      renderClothes(); renderSavedOutfits(); renderCalendar();
+    } catch(err){ toast('文件格式错误'); }
+  };
+  r.readAsText(file);
+}
+
+function renderStats(){
+  const s = document.getElementById('stats');
+  const cats = {};
+  data.clothes.forEach(c => { cats[c.category] = (cats[c.category]||0)+1; });
+  s.innerHTML = `
+    衣物总数：<strong>${data.clothes.length}</strong> 件<br>
+    搭配方案：<strong>${data.outfits.length}</strong> 套<br>
+    穿着记录：<strong>${data.records.length}</strong> 天<br>
+    ${Object.entries(cats).map(([k,v])=>`${catNames[k]||k}：${v} 件`).join('<br>')}
+  `;
+}
+
+// ============ TOAST ============
+function toast(msg){
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+// ============ MODAL CLOSE ============
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('show'); });
+});
+
+// ============ INIT ============
+renderClothes();
+
+// PWA
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
 </body>
 </html>
