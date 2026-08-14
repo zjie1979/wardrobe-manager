@@ -186,6 +186,18 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 .batch-card .fields .color-dot.sel{border-color:var(--dark)}
 .batch-card .rm-btn{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;cursor:pointer;border:none;line-height:1}
 .batch-card:hover .rm-btn{display:flex}
+.freq-toggle{display:flex;gap:6px;margin-top:2px}
+.freq-btn{flex:1;padding:5px 0;border:1px solid var(--border);border-radius:6px;background:#fafafa;font-size:11px;cursor:pointer;color:#888;transition:all .15s}
+.freq-btn.active{background:#e8f5e9;border-color:#a5d6a7;color:#2e7d32;font-weight:600}
+.freq-btn.active.rarely{background:#fff3e0;border-color:#ffcc80;color:#e65100}
+.cloth-card .freq-tag{position:absolute;bottom:28px;right:6px;font-size:10px;padding:2px 8px;border-radius:10px;border:none;cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:600;line-height:1.4}
+.cloth-card .freq-tag.rarely{background:#fff3e0;color:#e65100}
+.freq-group{margin-bottom:18px}
+#clothes-grid{display:block}
+.freq-group-title{font-size:13px;font-weight:700;color:var(--dark);margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.freq-group-title span{font-size:11px;font-weight:600;color:#999;background:#f0f0f0;border-radius:10px;padding:1px 8px}
+.freq-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+.freq-group-empty{grid-column:1/-1;color:#bbb;font-size:12px;padding:14px 0;text-align:center}
 
 .batch-progress{display:flex;align-items:center;gap:12px;margin:16px 0;padding:12px 16px;background:#fff;border-radius:12px;box-shadow:var(--shadow)}
 .batch-progress .bar{flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden}
@@ -588,14 +600,33 @@ function renderClothes(){
   document.getElementById('cloth-count').textContent = list.length + ' 件';
   if(!list.length){ grid.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  grid.innerHTML = list.map(c => `
+
+  const cardHTML = c => `
     <div class="cloth-card" onclick="viewCloth('${c.id}')">
       <div class="rm" onclick="event.stopPropagation();removeCloth('${c.id}')">×</div>
       <div class="cat-dot" style="background:${colorHex(c.color)}"></div>
       <img src="${c.image}" alt="${c.name}">
       <div class="name">${c.name}</div>
-    </div>
-  `).join('');
+      <button class="freq-tag ${(c.frequency||'often')==='rarely'?'rarely':''}" onclick="event.stopPropagation();toggleFrequency('${c.id}')">${(c.frequency||'often')==='rarely'?'不常穿':'常穿'}</button>
+    </div>`;
+
+  const often = list.filter(c => (c.frequency||'often') !== 'rarely');
+  const rarely = list.filter(c => (c.frequency||'often') === 'rarely');
+
+  let html = '';
+  html += `<div class="freq-group"><div class="freq-group-title">常穿 <span>${often.length}</span></div><div class="freq-group-grid">${often.length ? often.map(cardHTML).join('') : '<div class="freq-group-empty">暂无常穿衣物</div>'}</div></div>`;
+  html += `<div class="freq-group"><div class="freq-group-title">不常穿 <span>${rarely.length}</span></div><div class="freq-group-grid">${rarely.length ? rarely.map(cardHTML).join('') : '<div class="freq-group-empty">暂无不常穿衣物</div>'}</div></div>`;
+  grid.innerHTML = html;
+}
+
+function toggleFrequency(id){
+  const c = data.clothes.find(x=>x.id===id);
+  if(!c) return;
+  c.frequency = (c.frequency||'often')==='rarely' ? 'often' : 'rarely';
+  save();
+  renderClothes();
+  if(typeof renderDeclutter==='function') renderDeclutter();
+  toast(c.frequency==='rarely' ? '已标为不常穿' : '已标为常穿');
 }
 
 function viewCloth(id){
@@ -660,6 +691,7 @@ function saveCloth(){
     color: selectedColor||'gray',
     seasons, occasions,
     image,
+    frequency: 'often',
     addedAt: new Date().toISOString(),
     lastWorn: null
   });
@@ -925,6 +957,7 @@ function saveRecord(){
 function renderDeclutter(){
   const now = new Date();
   const old = data.clothes.filter(c => {
+    if((c.frequency||'often') === 'rarely') return true;
     if(!c.lastWorn) return true;
     return (now - new Date(c.lastWorn)) / 86400000 > 90;
   });
@@ -934,9 +967,10 @@ function renderDeclutter(){
   empty.style.display='none';
   list.innerHTML = old.map(c => {
     const days = c.lastWorn ? Math.floor((now - new Date(c.lastWorn))/86400000) : '∞';
+    const reason = (c.frequency||'often')==='rarely' ? '标记为不常穿' : (days==='∞'?'从未穿过':days+'天未穿');
     return `<div class="declutter-item">
       <img src="${c.image}">
-      <div class="info"><div class="n">${c.name}</div><div class="d">${days==='∞'?'从未穿过':days+'天未穿'}</div></div>
+      <div class="info"><div class="n">${c.name}</div><div class="d">${reason}</div></div>
       <div class="acts">
         <button class="btn btn-sm" style="background:#e8f5e9;color:#2e7d32" onclick="keepItem('${c.id}')">保留</button>
         <button class="btn btn-sm" style="background:#ffebee;color:#c62828" onclick="discardItem('${c.id}')">断舍离</button>
@@ -945,8 +979,8 @@ function renderDeclutter(){
   }).join('');
 }
 
-function keepItem(id){ const c=data.clothes.find(x=>x.id===id); if(c){c.lastWorn=new Date().toISOString(); save(); renderDeclutter();} }
-function discardItem(id){ if(!confirm('确定断舍离？')) return; data.clothes=data.clothes.filter(c=>c.id!==id); save(); renderDeclutter(); toast('已断舍离'); }
+function keepItem(id){ const c=data.clothes.find(x=>x.id===id); if(c){c.lastWorn=new Date().toISOString(); c.frequency='often'; save(); renderDeclutter(); renderClothes();} }
+function discardItem(id){ if(!confirm('确定断舍离？')) return; data.clothes=data.clothes.filter(c=>c.id!==id); save(); renderDeclutter(); renderClothes(); toast('已断舍离'); }
 
 // ============ BACKUP ============
 function exportData(){
@@ -1046,6 +1080,7 @@ function processBatchFiles(files){
         id, image: img,
         name: '', category: batchMode==='category' ? batchCat : 'top',
         color: 'gray', seasons: [], selected: true,
+        frequency: 'often',
         aiStatus: batchMode==='ai' ? 'pending' : 'ready'
       };
       batchItems.push(item);
@@ -1250,6 +1285,10 @@ function renderBatchGrid(){
         <div class="color-row">
           ${colorOptions.map(c => `<div class="color-dot ${item.color===c.key?'sel':''}" style="background:${c.hex}" onclick="updateBatchField('${item.id}','color','${c.key}')"></div>`).join('')}
         </div>
+        <div class="freq-toggle" ${item.aiStatus==='pending'?'style="pointer-events:none;opacity:.5"':''}>
+          <button class="freq-btn ${item.frequency==='often'?'active':''}" onclick="updateBatchField('${item.id}','frequency','often')">常穿</button>
+          <button class="freq-btn ${item.frequency==='rarely'?'active rarely':''}" onclick="updateBatchField('${item.id}','frequency','rarely')">不常穿</button>
+        </div>
         ${aiIndicator}
       </div>
     </div>`;
@@ -1260,7 +1299,7 @@ function updateBatchField(id, field, value){
   const item = batchItems.find(b => b.id === id);
   if(!item) return;
   item[field] = value;
-  if(field === 'color' || field === 'category'){
+  if(field === 'color' || field === 'category' || field === 'frequency'){
     renderBatchGrid();
   }
 }
@@ -1303,6 +1342,7 @@ function doSaveBatchItems(items){
       color: item.color,
       seasons: item.seasons.length ? item.seasons : ['spring','autumn'],
       occasions: [],
+      frequency: item.frequency || 'often',
       image: item.image,
       addedAt: new Date().toISOString(),
       lastWorn: null
