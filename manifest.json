@@ -1,0 +1,22 @@
+{
+  "name": "衣橱管理器",
+  "short_name": "衣橱",
+  "description": "智能衣橱管理与搭配推荐",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#ff2e4d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23ff2e4d'/%3E%3Cpath d='M48 56v80a8 8 0 008 8h80a8 8 0 008-8V56M48 56l48-24 48 24M48 56h96' fill='none' stroke='white' stroke-width='6'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23ff2e4d'/%3E%3Cpath d='M128 149v214a21 21 0 0021 21h214a21 21 0 0021-21V149M128 149l128-64 128 64M128 149h256' fill='none' stroke='white' stroke-width='16'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
