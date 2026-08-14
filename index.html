@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>我的电子衣橱</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f5e6e8'/%3E%3Cpath d='M32 10L24 17H15a3 3 0 00-3 3v29a3 3 0 003 3h34a3 3 0 003-3V20a3 3 0 00-3-3h-9L32 10z' fill='none' stroke='%23333' stroke-width='3'/%3E%3Cpath d='M24 34a8 8 0 0016 0' fill='none' stroke='%23333' stroke-width='3'/%3E%3C/svg%3E">
 <meta name="theme-color" content="#e8b4b8">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -18,7 +19,7 @@ html,body{height:100%;overflow:hidden}
 body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text)}
 
 /* ===== LAYOUT ===== */
-.app{display:flex;height:100vh;width:100%}
+.app{display:flex;height:100vh;height:100dvh;width:100%;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 
 /* sidebar */
 .sidebar{width:180px;background:var(--pink);display:flex;flex-direction:column;padding:24px 16px;flex-shrink:0}
@@ -44,7 +45,7 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 /* ===== TOP BAR ===== */
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .topbar h2{font-size:18px;font-weight:600}
-.btn{padding:10px 22px;border:none;border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn{padding:10px 22px;border:none;border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;min-height:40px}
 .btn:active{transform:scale(.96)}
 .btn-dark{background:var(--dark);color:#fff}
 .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
@@ -171,7 +172,9 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 .batch-mode-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
 
 .batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.batch-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);position:relative;transition:all .2s}
+.batch-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);position:relative;transition:all .2s;border:2px solid transparent}
+.batch-card:not(.selected){opacity:.55}
+.batch-card.selected{border-color:var(--dark)}
 .batch-card .img-wrap{position:relative;aspect-ratio:1;overflow:hidden}
 .batch-card .img-wrap img{width:100%;height:100%;object-fit:cover}
 .batch-card .img-wrap .badge{position:absolute;top:6px;right:6px;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600}
@@ -186,6 +189,7 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
 .batch-card .fields .color-dot.sel{border-color:var(--dark)}
 .batch-card .rm-btn{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;cursor:pointer;border:none;line-height:1}
 .batch-card:hover .rm-btn{display:flex}
+.batch-card .select-btn{position:absolute;top:4px;right:4px;min-width:42px;height:22px;border-radius:999px;border:none;background:rgba(255,255,255,.9);font-size:11px;font-weight:700;color:var(--dark);cursor:pointer}
 .freq-toggle{display:flex;gap:6px;margin-top:2px}
 .freq-btn{flex:1;padding:5px 0;border:1px solid var(--border);border-radius:6px;background:#fafafa;font-size:11px;cursor:pointer;color:#888;transition:all .15s}
 .freq-btn.active{background:#e8f5e9;border-color:#a5d6a7;color:#2e7d32;font-weight:600}
@@ -237,9 +241,19 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
   .sidebar .logo{display:none}
   .sidebar nav{flex-direction:row;gap:4px}
   .sidebar nav a{padding:8px 12px;flex-shrink:0}
+  .sidebar nav a span{display:inline}
   .main{flex-direction:column}
   .panel-left{border-right:none;border-bottom:1px solid var(--border)}
+  .panel{padding:18px 14px}
+  .topbar{gap:12px;align-items:flex-start}
+  .topbar h2{line-height:40px}
+  .filter-bar select{flex:1;min-width:92px}
   .cloth-grid{grid-template-columns:repeat(3,1fr)}
+  .cloth-card .rm,.batch-card .rm-btn{display:flex}
+  .batch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .batch-footer{flex-direction:column;align-items:stretch}
+  .batch-footer>div{justify-content:space-between}
+  .mannequin-stage{min-height:420px}
 }
 </style>
 </head>
@@ -304,7 +318,7 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
         <!-- Mode selector -->
         <div class="batch-mode-bar">
           <div class="batch-mode-btn active" data-mode="batch" onclick="switchBatchMode('batch')">批量上传</div>
-          <div class="batch-mode-btn" data-mode="ai" onclick="switchBatchMode('ai')">AI 智能识别</div>
+          <div class="batch-mode-btn" data-mode="ai" onclick="switchBatchMode('ai')">本地预识别</div>
           <div class="batch-mode-btn" data-mode="category" onclick="switchBatchMode('category')">按类别快速录入</div>
         </div>
 
@@ -322,13 +336,13 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
         <div class="batch-upload-zone" id="batch-upload-zone" onclick="document.getElementById('batch-file-in').click()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
           <p>点击上传或拖拽多张衣物照片</p>
-          <span class="hint">支持一次选择多张，也可以连续拍照</span>
+          <span class="hint">照片会自动压缩；本地预识别只根据图片颜色和比例给建议</span>
         </div>
         <input type="file" id="batch-file-in" accept="image/*" multiple capture="environment" style="display:none">
 
         <!-- Progress bar (for AI mode) -->
         <div class="batch-progress" id="batch-progress" style="display:none">
-          <div class="label" id="batch-progress-label">识别中...</div>
+          <div class="label" id="batch-progress-label">预识别中...</div>
           <div class="bar"><div class="bar-fill" id="batch-progress-fill" style="width:0%"></div></div>
           <div class="label" id="batch-progress-count">0/0</div>
         </div>
@@ -533,7 +547,10 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
         <label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" class="c-occ" value="正式">正式</label>
       </div>
     </div>
-    <button class="btn btn-dark" style="width:100%" onclick="saveCloth()">保存</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="closeAddCloth()">取消</button>
+      <button class="btn btn-dark" style="flex:1" onclick="saveCloth()">保存</button>
+    </div>
   </div>
 </div>
 
@@ -542,15 +559,41 @@ body{font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(
   <div class="modal-box">
     <h3 id="record-title">记录穿搭</h3>
     <div id="record-list"></div>
-    <button class="btn btn-dark" style="width:100%;margin-top:16px" onclick="saveRecord()">保存记录</button>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('record-modal').classList.remove('show')">取消</button>
+      <button class="btn btn-dark" style="flex:1" onclick="saveRecord()">保存记录</button>
+    </div>
   </div>
 </div>
 
 <script>
 // ============ DATA ============
 const STORE = 'wardrobe_v3';
-let data = JSON.parse(localStorage.getItem(STORE) || '{"clothes":[],"outfits":[],"records":[]}');
-function save(){ localStorage.setItem(STORE, JSON.stringify(data)); }
+const EMPTY_DATA = {clothes:[],outfits:[],records:[]};
+function normalizeData(value){
+  const src = value && typeof value === 'object' ? value : {};
+  return {
+    clothes: Array.isArray(src.clothes) ? src.clothes : [],
+    outfits: Array.isArray(src.outfits) ? src.outfits : [],
+    records: Array.isArray(src.records) ? src.records : []
+  };
+}
+function loadData(){
+  try { return normalizeData(JSON.parse(localStorage.getItem(STORE) || 'null')); }
+  catch(err){ return {...EMPTY_DATA}; }
+}
+let data = loadData();
+function save(){
+  try { localStorage.setItem(STORE, JSON.stringify(data)); }
+  catch(err){ toast('保存失败：照片太多时请先导出备份，再分批录入'); }
+}
+function uid(prefix){ return prefix + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function hasSeason(cloth, season){
+  return Array.isArray(cloth.seasons) && cloth.seasons.includes(season);
+}
 
 let selectedForOutfit = new Set();
 let erasing = false;
@@ -585,7 +628,7 @@ function filterClothes(list, catF, colorF, seasonF){
   return list.filter(c => {
     if(catF!=='all' && c.category!==catF) return false;
     if(colorF!=='all' && c.color!==colorF) return false;
-    if(seasonF!=='all' && !c.seasons.includes(seasonF)) return false;
+    if(seasonF!=='all' && !hasSeason(c, seasonF)) return false;
     return true;
   });
 }
@@ -605,8 +648,8 @@ function renderClothes(){
     <div class="cloth-card" onclick="viewCloth('${c.id}')">
       <div class="rm" onclick="event.stopPropagation();removeCloth('${c.id}')">×</div>
       <div class="cat-dot" style="background:${colorHex(c.color)}"></div>
-      <img src="${c.image}" alt="${c.name}">
-      <div class="name">${c.name}</div>
+      <img src="${c.image}" alt="${esc(c.name)}">
+      <div class="name">${esc(c.name)}</div>
       <button class="freq-tag ${(c.frequency||'often')==='rarely'?'rarely':''}" onclick="event.stopPropagation();toggleFrequency('${c.id}')">${(c.frequency||'often')==='rarely'?'不常穿':'常穿'}</button>
     </div>`;
 
@@ -638,6 +681,10 @@ function viewCloth(id){
 function removeCloth(id){
   if(!confirm('确定删除这件衣物？')) return;
   data.clothes = data.clothes.filter(c=>c.id!==id);
+  data.outfits = data.outfits.map(o => ({...o, items:(o.items||[]).filter(itemId=>itemId!==id)})).filter(o => o.items.length);
+  data.records = data.records.map(r => ({...r, items:(r.items||[]).filter(itemId=>itemId!==id)})).filter(r => r.items.length);
+  selectedForOutfit.delete(id);
+  wornItems = wornItems.filter(w=>w.clothId!==id);
   save(); renderClothes();
 }
 
@@ -659,13 +706,41 @@ function resetAddForm(){
 // file input
 document.getElementById('file-in').addEventListener('change', e => {
   const file = e.target.files[0]; if(!file) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    currentPhoto = ev.target.result;
+  readImageFile(file).then(img => {
+    currentPhoto = img;
     document.getElementById('upload-zone').innerHTML = `<img src="${currentPhoto}">`;
-  };
-  r.readAsDataURL(file);
+  }).catch(() => toast('照片读取失败'));
 });
+
+function readImageFile(file){
+  return new Promise((resolve, reject) => {
+    if(!file || !file.type.startsWith('image/')){ reject(new Error('not image')); return; }
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => resolve(resizeImage(img));
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeImage(img){
+  const maxSide = 1280;
+  const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+  const width = Math.max(1, Math.round(img.width * ratio));
+  const height = Math.max(1, Math.round(img.height * ratio));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,width,height);
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', .82);
+}
 
 // color dots
 document.querySelectorAll('#color-row .color-dot').forEach(d => {
@@ -686,7 +761,7 @@ function saveCloth(){
   const image = currentPhoto || generatePlaceholder(name, selectedColor||'gray');
   
   data.clothes.push({
-    id: 'c'+Date.now(),
+    id: uid('c'),
     name, category,
     color: selectedColor||'gray',
     seasons, occasions,
@@ -729,8 +804,8 @@ function renderOutfitClothes(){
   grid.innerHTML = list.map(c => `
     <div class="cloth-card ${selectedForOutfit.has(c.id)?'selected':''}" onclick="toggleOutfitItem('${c.id}')">
       <div class="cat-dot" style="background:${colorHex(c.color)}"></div>
-      <img src="${c.image}" alt="${c.name}">
-      <div class="name">${c.name}</div>
+      <img src="${c.image}" alt="${esc(c.name)}">
+      <div class="name">${esc(c.name)}</div>
     </div>
   `).join('');
   document.getElementById('outfit-selected-count').textContent = selectedForOutfit.size + ' 件';
@@ -768,7 +843,7 @@ function saveOutfit(){
   const seasons = Array.from(document.querySelectorAll('#outfit-seasons .season-pill.active')).map(p=>p.dataset.s);
   
   data.outfits.push({
-    id: 'o'+Date.now(),
+    id: uid('o'),
     name, scene, seasons,
     items: [...selectedForOutfit],
     createdAt: new Date().toISOString()
@@ -790,14 +865,15 @@ function renderSavedOutfits(){
   const div = document.getElementById('saved-outfits');
   if(!data.outfits.length){ div.innerHTML='<p style="font-size:12px;color:var(--text2)">还没有保存的搭配</p>'; return; }
   div.innerHTML = data.outfits.slice().reverse().map(o => {
-    const items = o.items.map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
+    const items = (o.items||[]).map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
+    const seasons = Array.isArray(o.seasons) ? o.seasons : [];
     return `
     <div class="outfit-saved">
       <div class="outfit-saved-head">
-        <span class="outfit-saved-name">${o.name}</span>
-        <span class="outfit-saved-meta">${o.scene} · ${o.seasons.join('/')}</span>
+        <span class="outfit-saved-name">${esc(o.name)}</span>
+        <span class="outfit-saved-meta">${esc(o.scene)} · ${esc(seasons.join('/'))}</span>
       </div>
-      <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}" alt="${i.name}">`).join('')}</div>
+      <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}" alt="${esc(i.name)}">`).join('')}</div>
       <div class="outfit-actions">
         <button class="btn btn-outline btn-sm" onclick="loadOutfit('${o.id}')">穿上</button>
         <button class="btn btn-outline btn-sm" onclick="deleteOutfit('${o.id}')" style="color:#c62828">删除</button>
@@ -816,7 +892,7 @@ function loadOutfit(id){
   document.getElementById('outfit-name').value = o.name;
   document.getElementById('outfit-scene').value = o.scene;
   document.querySelectorAll('#outfit-seasons .season-pill').forEach(p => {
-    p.classList.toggle('active', o.seasons.includes(p.dataset.s));
+    p.classList.toggle('active', Array.isArray(o.seasons) && o.seasons.includes(p.dataset.s));
   });
   renderOutfitClothes();
   updateMannequin();
@@ -915,26 +991,25 @@ function calNav(d){ calMonth.setMonth(calMonth.getMonth()+d); renderCalendar(); 
 
 function clickDay(ds){
   const existing = data.records.filter(r=>r.date===ds);
+  const div = document.getElementById('day-detail');
   if(existing.length){
-    // show detail
-    const div = document.getElementById('day-detail');
     div.innerHTML = existing.map(r => {
-      const items = r.items.map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
+      const items = (r.items||[]).map(id=>data.clothes.find(c=>c.id===id)).filter(Boolean);
       return `<div class="outfit-saved">
-        <div class="outfit-saved-head"><span class="outfit-saved-name">${r.outfitName||'每日穿搭'}</span><span class="outfit-saved-meta">${ds}</span></div>
-        <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}">`).join('')}</div>
+        <div class="outfit-saved-head"><span class="outfit-saved-name">${esc(r.outfitName||'每日穿搭')}</span><span class="outfit-saved-meta">${ds}</span></div>
+        <div class="outfit-saved-items">${items.map(i=>`<img src="${i.image}" alt="${esc(i.name)}">`).join('')}</div>
       </div>`;
     }).join('');
   } else {
-    // open record modal
+    div.innerHTML = '';
     recordDate = ds;
     document.getElementById('record-title').textContent = `记录 ${ds} 穿搭`;
     const list = document.getElementById('record-list');
     list.innerHTML = data.clothes.map(c => `
       <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
         <input type="checkbox" class="rec-check" value="${c.id}">
-        <img src="${c.image}" style="width:44px;height:44px;border-radius:6px;object-fit:cover">
-        <span style="font-size:13px">${c.name}</span>
+        <img src="${c.image}" alt="${esc(c.name)}" style="width:44px;height:44px;border-radius:6px;object-fit:cover">
+        <span style="font-size:13px">${esc(c.name)}</span>
       </label>
     `).join('');
     document.getElementById('record-modal').classList.add('show');
@@ -945,8 +1020,7 @@ function saveRecord(){
   const items = Array.from(document.querySelectorAll('.rec-check:checked')).map(c=>c.value);
   if(!items.length){ toast('请选择衣物'); return; }
   data.records.push({ date:recordDate, items, outfitName:'每日穿搭', createdAt:new Date().toISOString() });
-  // update lastWorn
-  items.forEach(id=>{ const c=data.clothes.find(x=>x.id===id); if(c) c.lastWorn=new Date().toISOString(); });
+  items.forEach(id=>{ const c=data.clothes.find(x=>x.id===id); if(c) c.lastWorn=recordDate; });
   save();
   document.getElementById('record-modal').classList.remove('show');
   renderCalendar();
@@ -969,8 +1043,8 @@ function renderDeclutter(){
     const days = c.lastWorn ? Math.floor((now - new Date(c.lastWorn))/86400000) : '∞';
     const reason = (c.frequency||'often')==='rarely' ? '标记为不常穿' : (days==='∞'?'从未穿过':days+'天未穿');
     return `<div class="declutter-item">
-      <img src="${c.image}">
-      <div class="info"><div class="n">${c.name}</div><div class="d">${reason}</div></div>
+      <img src="${c.image}" alt="${esc(c.name)}">
+      <div class="info"><div class="n">${esc(c.name)}</div><div class="d">${reason}</div></div>
       <div class="acts">
         <button class="btn btn-sm" style="background:#e8f5e9;color:#2e7d32" onclick="keepItem('${c.id}')">保留</button>
         <button class="btn btn-sm" style="background:#ffebee;color:#c62828" onclick="discardItem('${c.id}')">断舍离</button>
@@ -997,11 +1071,20 @@ function importData(e){
   const r = new FileReader();
   r.onload = ev => {
     try {
-      const imported = JSON.parse(ev.target.result);
-      if(imported.clothes) data = imported;
+      const imported = normalizeData(JSON.parse(ev.target.result));
+      if(!imported.clothes.length && !imported.outfits.length && !imported.records.length){
+        toast('备份里没有可导入的数据');
+        e.target.value = '';
+        return;
+      }
+      if(!confirm('导入会覆盖当前衣橱数据，确定继续？')){ e.target.value = ''; return; }
+      data = imported;
+      selectedForOutfit.clear();
+      wornItems = [];
       save(); toast('数据已恢复');
-      renderClothes(); renderSavedOutfits(); renderCalendar();
+      renderClothes(); renderSavedOutfits(); renderCalendar(); renderDeclutter(); renderStats();
     } catch(err){ toast('文件格式错误'); }
+    e.target.value = '';
   };
   r.readAsText(file);
 }
@@ -1014,7 +1097,7 @@ function renderStats(){
     衣物总数：<strong>${data.clothes.length}</strong> 件<br>
     搭配方案：<strong>${data.outfits.length}</strong> 套<br>
     穿着记录：<strong>${data.records.length}</strong> 天<br>
-    ${Object.entries(cats).map(([k,v])=>`${catNames[k]||k}：${v} 件`).join('<br>')}
+    ${Object.entries(cats).map(([k,v])=>`${esc(catNames[k]||k)}：${v} 件`).join('<br>') || '暂无分类统计'}
   `;
 }
 
@@ -1067,11 +1150,9 @@ batchZone.addEventListener('drop', e => {
 });
 
 function processBatchFiles(files){
-  const promises = files.map(file => new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = ev => resolve(ev.target.result);
-    reader.readAsDataURL(file);
-  }));
+  const imageFiles = files.filter(file => file.type.startsWith('image/'));
+  if(!imageFiles.length){ toast('请选择图片文件'); return; }
+  const promises = imageFiles.map(file => readImageFile(file));
   
   Promise.all(promises).then(images => {
     images.forEach(img => {
@@ -1091,10 +1172,10 @@ function processBatchFiles(files){
     if(batchMode === 'ai'){
       runAIRecognition();
     }
-  });
+  }).catch(() => toast('有照片读取失败，请换一张再试'));
 }
 
-// AI Recognition (simulated - analyzes image colors to guess attributes)
+// Local pre-recognition: analyzes image colors and aspect ratio to suggest attributes.
 async function runAIRecognition(){
   const pending = batchItems.filter(b => b.aiStatus === 'pending');
   if(!pending.length) return;
@@ -1107,15 +1188,14 @@ async function runAIRecognition(){
     const pct = Math.round(((i+1) / pending.length) * 100);
     document.getElementById('batch-progress-fill').style.width = pct + '%';
     document.getElementById('batch-progress-count').textContent = `${i+1}/${pending.length}`;
-    document.getElementById('batch-progress-label').textContent = 'AI 识别中...';
+    document.getElementById('batch-progress-label').textContent = '本地预识别中...';
     
-    // Simulate AI analysis delay
-    await new Promise(r => setTimeout(r, 300 + Math.random() * 400));
+    await new Promise(r => setTimeout(r, 120));
     
     // Analyze image colors
     const analysis = await analyzeImageColors(item.image);
     
-    // Apply AI guesses
+    // Apply local guesses
     item.color = analysis.dominantColor;
     item.category = guessCategory(analysis);
     item.name = generateAIName(item.category, item.color);
@@ -1125,7 +1205,7 @@ async function runAIRecognition(){
     renderBatchGrid();
   }
   
-  document.getElementById('batch-progress-label').textContent = '识别完成';
+  document.getElementById('batch-progress-label').textContent = '预识别完成';
   setTimeout(() => { progress.style.display = 'none'; }, 2000);
 }
 
@@ -1200,22 +1280,14 @@ function rgbToHue(r, g, b){
 }
 
 function guessCategory(analysis){
-  // Simple heuristics based on image aspect ratio and color distribution
-  const { width, height, dominantColor } = analysis;
+  const { width, height, avgBrightness } = analysis;
   const ratio = width / height;
   
-  // Tall images might be dresses or full-body
-  if(ratio < 0.6) return Math.random() > 0.5 ? 'dress' : 'top';
-  // Wide images might be folded items or accessories
+  if(ratio < 0.55) return 'dress';
   if(ratio > 1.5) return 'accessory';
-  // Square-ish
-  const rand = Math.random();
-  if(rand < 0.35) return 'top';
-  if(rand < 0.55) return 'bottom';
-  if(rand < 0.7) return 'outerwear';
-  if(rand < 0.85) return 'dress';
-  if(rand < 0.95) return 'shoes';
-  return 'accessory';
+  if(avgBrightness < 65) return 'outerwear';
+  if(ratio < 0.8) return 'top';
+  return 'top';
 }
 
 function guessSeasons(category){
@@ -1264,18 +1336,19 @@ function renderBatchGrid(){
     ) : '';
     
     const aiIndicator = isAI && item.aiStatus === 'pending' 
-      ? '<div class="ai-thinking"><span>AI 分析</span><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>'
+      ? '<div class="ai-thinking"><span>本地分析</span><span class="dots"><span>.</span><span>.</span><span>.</span></span></div>'
       : '';
     
     return `
-    <div class="batch-card" data-id="${item.id}">
+    <div class="batch-card ${item.selected?'selected':''}" data-id="${item.id}">
       <button class="rm-btn" onclick="removeBatchItem('${item.id}')">×</button>
+      <button class="select-btn" onclick="toggleBatchSelected('${item.id}')">${item.selected?'已选':'未选'}</button>
       <div class="img-wrap">
-        <img src="${item.image}">
+        <img src="${item.image}" alt="${esc(item.name || '待录入衣物')}">
         ${statusBadge}
       </div>
       <div class="fields">
-        <input type="text" placeholder="名称" value="${item.name}" 
+        <input type="text" placeholder="名称" value="${esc(item.name)}" 
           onchange="updateBatchField('${item.id}','name',this.value)"
           ${item.aiStatus==='pending'?'disabled':''}>
         <select onchange="updateBatchField('${item.id}','category',this.value)"
@@ -1293,6 +1366,13 @@ function renderBatchGrid(){
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleBatchSelected(id){
+  const item = batchItems.find(b => b.id === id);
+  if(!item) return;
+  item.selected = !item.selected;
+  renderBatchGrid();
 }
 
 function updateBatchField(id, field, value){
@@ -1336,7 +1416,7 @@ function saveSelectedBatch(){
 function doSaveBatchItems(items){
   items.forEach(item => {
     data.clothes.push({
-      id: 'c' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
+      id: uid('c'),
       name: item.name || '未命名',
       category: item.category,
       color: item.color,
